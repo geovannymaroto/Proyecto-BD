@@ -16,7 +16,7 @@
 --6. Boton Test = Success
 --7. Connect
         
---DROP TABLE FACTURACION CASCADE CONSTRAINTS; --Eliminar tablas con constraints
+--DROP TABLE MATERIALES CASCADE CONSTRAINTS; --Eliminar tablas con constraints
 
 CREATE TABLE USUARIOS(
     ced NUMBER PRIMARY KEY,
@@ -24,13 +24,13 @@ CREATE TABLE USUARIOS(
     apellidos VARCHAR2(50) NOT NULL,
     fecha_nacimiento DATE NOT NULL,
     contrasenha VARCHAR2(100) NOT NULL);
-    
+
 CREATE TABLE MATERIALES(
     sku_producto VARCHAR2(30) PRIMARY KEY,
     descripcion VARCHAR2(50) NOT NULL,
     es_combo VARCHAR2(1) DEFAULT 'N',
     precio_unidad NUMBER NOT NULL,
-    fecha_ultima_modificacion DATE DEFAULT SYSDATE,
+    fecha_registro_producto DATE DEFAULT SYSDATE,
     descontinuado VARCHAR2(1) DEFAULT 'N');
 
 --INSERT INTO MATERIALES(sku_producto,descripcion,precio_unidad) VALUES('ABC123','Comida',148.32);
@@ -127,15 +127,195 @@ CREATE TABLE IVA(
     
     CONSTRAINT iva_pk PRIMARY KEY(consecutivo)
 );
+COMMIT;
 
---SP-Luis-1: agrega nuevos valores a tabla IVA
+--PROCEDIMIENTOS - Luis
+
+--SP1 - Agrega nuevos valores a tabla IVA
 CREATE OR REPLACE PROCEDURE ivaTotal(numFactura IN NUMBER, precio IN NUMBER, sku IN VARCHAR2)
 AS
     iva NUMBER := precio*0.13;
     BEGIN
     INSERT INTO IVA(num_factura,sku_producto,iva_total) VALUES(numFactura,sku,iva);
+COMMIT;
 END;
 
 EXEC ivaTotal(22,3600,'MFG785');
 
 SELECT * FROM IVA;
+
+--SP2 - Agregar un producto nuevo sin combo
+CREATE OR REPLACE PROCEDURE nuevoProductoSin(producto IN VARCHAR2, descripcion IN VARCHAR2, precioUnidad IN NUMBER)
+AS
+BEGIN
+    INSERT INTO MATERIALES(sku_producto,descripcion,precio_unidad) VALUES(producto,descripcion,precioUnidad);
+COMMIT;
+END;
+
+Exec nuevoProductoSin('DFT34X','Tinta negra','6780');
+
+SELECT * FROM MATERIALES;
+
+--SP3 - Agregar un producto nuevo con combo
+CREATE OR REPLACE PROCEDURE nuevoProductoCon(producto IN VARCHAR2, descripcion IN VARCHAR2, precioUnidad IN NUMBER)
+AS
+BEGIN
+    INSERT INTO MATERIALES(sku_producto,descripcion,es_combo,precio_unidad) VALUES(producto,descripcion,'Y',precioUnidad);
+COMMIT;
+END;
+
+Exec nuevoProductoCon('DFT35X','Tinta blanca','6480');
+
+SELECT * FROM MATERIALES;
+
+--PROCEDIMIENTOS - Maria
+
+--SP1 - Actualizar estado de cotizacion 
+
+CREATE OR REPLACE PROCEDURE ActualizarEstadoCotizacion(
+  p_id_cotizacion IN INT,
+  p_estado_cotizacion IN VARCHAR2
+) AS
+BEGIN
+  UPDATE Cotizaciones
+  SET estado_cotizacion = p_estado_cotizacion
+  WHERE id_cotizacion = p_id_cotizacion;
+  
+  COMMIT;
+END;
+
+--SP2 - Obtener cantidad de unidades
+
+CREATE OR REPLACE PROCEDURE ObtenerUnidadesDisponibles(
+  p_sku_producto IN INT,
+  p_unidades OUT INT
+) AS
+BEGIN
+  SELECT unidades_disponibles INTO p_unidades
+  FROM Inventario
+  WHERE sku_producto = p_sku_producto;
+END;
+
+--SP3 - Registrar un cliente nuevo 
+--DIO ERROR
+
+CREATE OR REPLACE PROCEDURE RegistrarCliente(
+  p_ced_cliente IN INT,
+  p_tipo_ced IN VARCHAR2,
+  p_nombre_cliente IN VARCHAR2,
+  p_fecha_nacimiento IN DATE,
+  p_telefono IN VARCHAR2,
+  p_email IN VARCHAR2,
+  p_direccion IN VARCHAR2,
+  p_distrito IN VARCHAR2,
+  p_canton IN VARCHAR2,
+  p_provincia IN VARCHAR2
+) AS
+BEGIN
+  INSERT INTO Clientes (
+    ced_cliente,
+    tipo_ced,
+    nombre_cliente,
+    fecha_nacimiento,
+    telefono,
+    email,
+    direccion,
+    distrito,
+    canton,
+    provincia
+  ) VALUES (
+    p_ced_cliente,
+    p_tipo_ced,
+    p_nombre_cliente,
+    p_fecha_nacimiento,
+    p_telefono,
+    p_email,
+    p_direccion,
+    p_distrito,
+    p_canton,
+    p_provincia
+  );
+COMMIT;
+END;
+
+--SP4 - Descontinuar un producto
+--DIO ERROR
+
+CREATE OR REPLACE PROCEDURE DescontinuarMaterial(
+  p_sku_producto IN INT
+) AS
+BEGIN
+  UPDATE Materiales
+  SET descontinuado = TRUE
+  WHERE sku_producto = p_sku_producto;
+  
+COMMIT;
+END;
+
+--VISTAS - Maria 
+
+--Vista1 - Cotizacion de pedidos pendientes 
+
+CREATE OR REPLACE VIEW CotizacionesPendientes AS
+SELECT c.id_cotizacion, c.ced_proveedor, c.sku_producto, c.fecha_cotizacion, c.fecha_vencimiento,
+       c.dias_para_vencimiento, c.estado_cotizacion, c.fecha_recibido, c.estado_producto,
+       p.nombre_proveedor, m.descripcion
+FROM Cotizaciones c
+JOIN Proveedores p ON c.ced_proveedor = p.ced_proveedor
+JOIN Materiales m ON c.sku_producto = m.sku_producto
+WHERE c.fecha_recibido IS NULL;
+
+
+--Vista2 - Inventario insuficiente
+
+CREATE OR REPLACE VIEW InventarioInsuficiente AS
+SELECT I.sku_producto, M.descripcion, I.unidades_disponibles
+FROM Inventario I
+JOIN Materiales M ON I.sku_producto = M.sku_producto
+WHERE I.unidades_disponibles < 10; -- Umbral de unidades disponibles ajustable
+
+--FUNCIONES - Maria 
+
+--Funcion1 - Proveedor con mas cotizaciones
+--DIO ERROR
+
+CREATE OR REPLACE FUNCTION ObtenerProveedorMasCotizaciones RETURN VARCHAR2 AS
+  proveedor_nombre VARCHAR2(100);
+BEGIN
+  SELECT nombre_proveedor INTO proveedor_nombre
+  FROM (
+    SELECT ced_proveedor, COUNT(*) AS num_cotizaciones
+    FROM Cotizaciones
+    GROUP BY ced_proveedor
+    ORDER BY COUNT(*) DESC
+  ) WHERE ROWNUM = 1;
+  
+  RETURN proveedor_nombre;
+END;
+
+--Funcion2 - Calcular total de una factura
+--DIO ERROR
+
+CREATE OR REPLACE FUNCTION CalcularPrecioTotalFactura(p_num_factura IN INT) RETURN DECIMAL AS
+  precio_total DECIMAL(10, 2);
+BEGIN
+  SELECT SUM(precio_unidad * unidades) INTO precio_total
+  FROM FACTURACION
+  WHERE num_factura = p_num_factura;
+  
+  RETURN precio_total;
+END;
+
+--Funcion3 - Fecha mas reciente para cotizar con un proveedor 
+
+CREATE OR REPLACE FUNCTION ObtenerFechaRecienteCotizacionProveedor(p_ced_proveedor IN INT) RETURN DATE AS
+  fecha_reciente DATE;
+BEGIN
+  SELECT MAX(fecha_cotizacion) INTO fecha_reciente
+  FROM Cotizaciones
+  WHERE ced_proveedor = p_ced_proveedor;
+  
+  RETURN fecha_reciente;
+END;
+
+COMMIT;
