@@ -16,7 +16,7 @@
 --6. Boton Test = Success
 --7. Connect
         
---DROP TABLE MATERIALES CASCADE CONSTRAINTS; --Eliminar tablas con constraints
+--DROP TABLE CLIENTES CASCADE CONSTRAINTS; --Eliminar tablas con constraints
 
 CREATE TABLE USUARIOS(
     ced NUMBER PRIMARY KEY,
@@ -31,9 +31,9 @@ CREATE TABLE MATERIALES(
     es_combo VARCHAR2(1) DEFAULT 'N',
     precio_unidad NUMBER NOT NULL,
     fecha_registro_producto DATE DEFAULT SYSDATE,
-    descontinuado VARCHAR2(1) DEFAULT 'N');
+    descontinuado VARCHAR2(1) DEFAULT 'N'); --Valores: Y/N
 
---INSERT INTO MATERIALES(sku_producto,descripcion,precio_unidad) VALUES('ABC123','Comida',148.32);
+--INSERT INTO MATERIALES(sku_producto,descripcion,precio_unidad,descontinuado) VALUES('ABC123','Comida',148.32,'Y');
 
 --SELECT * FROM MATERIALES;
     
@@ -52,7 +52,7 @@ CREATE TABLE PROVEEDORES(
 
 CREATE TABLE CLIENTES(
     ced_cliente NUMBER PRIMARY KEY,
-    nombre_proveedor VARCHAR2(50) NOT NULL,
+    nombre_cliente VARCHAR2(50) NOT NULL,
     fecha_nacimiento DATE,
     telefono VARCHAR2(15) NOT NULL,
     email VARCHAR2(100) NOT NULL,
@@ -168,9 +168,25 @@ Exec nuevoProductoCon('DFT35X','Tinta blanca','6480');
 
 SELECT * FROM MATERIALES;
 
+--SP4 - Actualización de contraseña
+CREATE OR REPLACE PROCEDURE actualizarContra(cedula IN NUMBER, contra IN VARCHAR2)
+AS
+BEGIN
+  UPDATE USUARIOS
+  SET contrasenha = contra
+  WHERE ced = cedula;
+  COMMIT;
+END;
+
+SELECT * FROM USUARIOS;
+
+INSERT INTO USUARIOS(ced,nombre,apellidos,fecha_nacimiento,contrasenha) VALUES(123,'Luis','Castro','12-may-1994','A123');
+
+EXEC actualizarContra(123,'B456');
+
 --PROCEDIMIENTOS - Maria
 
---SP1 - Actualizar estado de cotizacion 
+--SP5 - Actualizar estado de cotizacion 
 
 CREATE OR REPLACE PROCEDURE ActualizarEstadoCotizacion(
   p_id_cotizacion IN INT,
@@ -184,7 +200,7 @@ BEGIN
   COMMIT;
 END;
 
---SP2 - Obtener cantidad de unidades
+--SP6 - Obtener cantidad de unidades
 
 CREATE OR REPLACE PROCEDURE ObtenerUnidadesDisponibles(
   p_sku_producto IN INT,
@@ -196,7 +212,7 @@ BEGIN
   WHERE sku_producto = p_sku_producto;
 END;
 
---SP3 - Registrar un cliente nuevo 
+--SP7 - Registrar un cliente nuevo 
 --DIO ERROR
 
 CREATE OR REPLACE PROCEDURE RegistrarCliente(
@@ -238,7 +254,7 @@ BEGIN
 COMMIT;
 END;
 
---SP4 - Descontinuar un producto
+--SP8 - Descontinuar un producto
 --DIO ERROR
 
 CREATE OR REPLACE PROCEDURE DescontinuarMaterial(
@@ -252,9 +268,34 @@ BEGIN
 COMMIT;
 END;
 
+--VISTAS - Luis
+
+--Vista1 - Ver materiales en combo
+CREATE OR REPLACE VIEW materialEnCombo
+AS
+    SELECT * FROM MATERIALES WHERE es_combo = 'Y' AND descontinuado = 'N';
+
+SELECT * FROM materialEnCombo;
+
+SELECT * FROM MATERIALES;
+
+--Vista2 - Ver materiales sin combo
+CREATE OR REPLACE VIEW materialSinCombo
+AS
+    SELECT * FROM MATERIALES WHERE es_combo = 'N' AND descontinuado = 'N';
+
+SELECT * FROM materialSinCombo;
+
+--Vista3 - Ver materiales descontinuados
+CREATE OR REPLACE VIEW materialDescontinuado
+AS
+    SELECT * FROM MATERIALES WHERE descontinuado = 'Y';
+
+SELECT * FROM materialDescontinuado;
+
 --VISTAS - Maria 
 
---Vista1 - Cotizacion de pedidos pendientes 
+--Vista4 - Cotizacion de pedidos pendientes 
 
 CREATE OR REPLACE VIEW CotizacionesPendientes AS
 SELECT c.id_cotizacion, c.ced_proveedor, c.sku_producto, c.fecha_cotizacion, c.fecha_vencimiento,
@@ -266,7 +307,7 @@ JOIN Materiales m ON c.sku_producto = m.sku_producto
 WHERE c.fecha_recibido IS NULL;
 
 
---Vista2 - Inventario insuficiente
+--Vista5 - Inventario insuficiente
 
 CREATE OR REPLACE VIEW InventarioInsuficiente AS
 SELECT I.sku_producto, M.descripcion, I.unidades_disponibles
@@ -274,9 +315,36 @@ FROM Inventario I
 JOIN Materiales M ON I.sku_producto = M.sku_producto
 WHERE I.unidades_disponibles < 10; -- Umbral de unidades disponibles ajustable
 
+--FUNCIONES - Luis
+
+--Funcion1 - Compras realizadas en un especifico mes por un cliente en especifico
+CREATE OR REPLACE FUNCTION clienteMasCompra(mes INTEGER, cedula INTEGER, anho INTEGER)
+RETURN NUMBER
+IS
+    compras_mes NUMBER;
+BEGIN
+    SELECT SUM(precio_venta) INTO compras_mes
+        FROM CLIENTES
+        INNER JOIN FACTURACION USING(ced_cliente)
+        WHERE ced_cliente = cedula AND EXTRACT(MONTH FROM fecha_venta) = mes AND EXTRACT(YEAR FROM fecha_venta) = anho;
+        RETURN compras_mes;
+END;
+
+--Funcion2 - Total IVA recolectado en mes especifico
+CREATE OR REPLACE FUNCTION iva_total(mes INTEGER, anho INTEGER)
+RETURN NUMBER
+IS
+    totalIva NUMBER;
+BEGIN
+    SELECT SUM(iva_total) INTO totalIva
+        FROM IVA
+        WHERE EXTRACT(MONTH FROM fecha_insercion) = mes AND EXTRACT(YEAR FROM fecha_insercion) = anho;
+        RETURN totalIva;
+END;
+
 --FUNCIONES - Maria 
 
---Funcion1 - Proveedor con mas cotizaciones
+--Funcion3 - Proveedor con mas cotizaciones
 --DIO ERROR
 
 CREATE OR REPLACE FUNCTION ObtenerProveedorMasCotizaciones RETURN VARCHAR2 AS
@@ -293,7 +361,7 @@ BEGIN
   RETURN proveedor_nombre;
 END;
 
---Funcion2 - Calcular total de una factura
+--Funcion4 - Calcular total de una factura
 --DIO ERROR
 
 CREATE OR REPLACE FUNCTION CalcularPrecioTotalFactura(p_num_factura IN INT) RETURN DECIMAL AS
@@ -306,7 +374,7 @@ BEGIN
   RETURN precio_total;
 END;
 
---Funcion3 - Fecha mas reciente para cotizar con un proveedor 
+--Funcion5 - Fecha mas reciente para cotizar con un proveedor 
 
 CREATE OR REPLACE FUNCTION ObtenerFechaRecienteCotizacionProveedor(p_ced_proveedor IN INT) RETURN DATE AS
   fecha_reciente DATE;
@@ -319,3 +387,19 @@ BEGIN
 END;
 
 COMMIT;
+
+--PAQUETES - Luis
+
+--Paquete1 - Inventario por SKU de producto
+
+--Paquete2 - Cotizacion por cédula de proveedor
+
+--TRIGGERS - Luis
+
+--Trigger1 - Ejecutar SP ivaTotal (agregar nuevo registro de IVA) cuando se registra una venta en FACTURACION
+
+--CURSORES - Luis
+
+--Cursor1 - Tomar los materiales descontinuados y trasladarlos a una tabla de auditoria de este tipo de materiales
+
+--Cursor2 - Tomar las cotizaciones a vencer en los proximos 10 días a vencer y cargarlo en una tabla destinada a eso
