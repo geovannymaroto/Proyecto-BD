@@ -168,7 +168,7 @@ Exec nuevoProductoCon('DFT35X','Tinta blanca','6480');
 
 SELECT * FROM MATERIALES;
 
---SP4 - Actualizaci髇 de contrase馻
+--SP4 - Actualizaci贸n de contrase帽a
 CREATE OR REPLACE PROCEDURE actualizarContra(cedula IN NUMBER, contra IN VARCHAR2)
 AS
 BEGIN
@@ -267,6 +267,39 @@ BEGIN
   
 COMMIT;
 END;
+--PROCEDIMIENTOS - Dylan
+
+--SP8 -Actualizar el precio de un material
+CREATE OR REPLACE PROCEDURE ActualizarPrecioMaterial(
+  p_sku_producto IN VARCHAR2,
+  p_nuevo_precio IN NUMBER
+)
+AS
+BEGIN
+  UPDATE Materiales
+  SET precio_unidad = p_nuevo_precio
+  WHERE sku_producto = p_sku_producto;
+  
+  COMMIT;
+END;
+/
+--SP9 -Registro cotizaci贸n
+        CREATE OR REPLACE PROCEDURE RegistrarCotizacion(
+  p_id_cotizacion IN NUMBER,
+  p_ced_proveedor IN NUMBER,
+  p_sku_producto IN VARCHAR2,
+  p_fecha_vencimiento IN DATE,
+  p_fecha_recibido IN DATE DEFAULT NULL
+)
+AS
+BEGIN
+  INSERT INTO Cotizaciones (id_cotizacion, ced_proveedor, sku_producto, fecha_cotizacion, fecha_vencimiento, fecha_recibido)
+  VALUES (p_id_cotizacion, p_ced_proveedor, p_sku_producto, SYSDATE, p_fecha_vencimiento, p_fecha_recibido);
+  
+  COMMIT;
+END;
+/
+
 
 --VISTAS - Luis
 
@@ -314,6 +347,49 @@ SELECT I.sku_producto, M.descripcion, I.unidades_disponibles
 FROM Inventario I
 JOIN Materiales M ON I.sku_producto = M.sku_producto
 WHERE I.unidades_disponibles < 10; -- Umbral de unidades disponibles ajustable
+
+-- VISTAS -Dylan 
+--Vista6 - ventas por cliente y mes
+CREATE OR REPLACE VIEW VentasPorClienteMes AS
+SELECT c.ced_cliente, c.nombre_cliente, EXTRACT(MONTH FROM f.fecha_venta) AS mes, SUM(f.precio_venta) AS total_ventas
+FROM CLIENTES c
+JOIN FACTURACION f ON c.ced_cliente = f.ced_cliente
+GROUP BY c.ced_cliente, c.nombre_cliente, EXTRACT(MONTH FROM f.fecha_venta);
+
+--Vista7 - Productos mas vendidos 
+CREATE OR REPLACE VIEW ProductosMasVendidos AS
+SELECT m.sku_producto, m.descripcion, SUM(f.unidades) AS total_vendido
+FROM MATERIALES m
+JOIN FACTURACION f ON m.sku_producto = f.sku_producto
+GROUP BY m.sku_producto, m.descripcion
+ORDER BY SUM(f.unidades) DESC;
+
+--Vista8 -Clientes con compras frecuentes 
+CREATE OR REPLACE VIEW ClientesComprasFrecuentes AS
+SELECT c.*
+FROM CLIENTES c
+WHERE EXISTS (SELECT 1 FROM FACTURACION f WHERE f.ced_cliente = c.ced_cliente GROUP BY f.ced_cliente HAVING COUNT(*) > 5);
+
+--Vista9 - Ventas del dia 
+CREATE OR REPLACE VIEW VentasPorDiaSemana AS
+SELECT TO_CHAR(fecha_venta, 'DAY') AS dia_semana, SUM(precio_venta) AS total_ventas
+FROM FACTURACION
+GROUP BY TO_CHAR(fecha_venta, 'DAY')
+ORDER BY TO_CHAR(fecha_venta, 'D');
+
+--Vista10 - Antiguedad de clientes 
+CREATE OR REPLACE VIEW ProveedoresMasAntiguos AS
+SELECT *
+FROM PROVEEDORES
+ORDER BY fecha_ingreso ASC;
+
+-- Vista11 -Factura de cliente 
+CREATE OR REPLACE VIEW FacturasCliente AS
+SELECT ced_cliente, COUNT(*) AS num_facturas_emitidas
+FROM Facturaci贸n
+GROUP BY ced_cliente;
+
+
 
 --FUNCIONES - Luis
 
@@ -388,18 +464,104 @@ END;
 
 COMMIT;
 
+--FUNCIONES - Dylan
+
+--Funcion6 -Total de compras de un cliente 
+CREATE OR REPLACE FUNCTION TotalComprasCliente(
+  p_ced_cliente IN NUMBER
+) RETURN NUMBER
+IS
+  total_compras NUMBER;
+BEGIN
+  SELECT COUNT(*) INTO total_compras
+  FROM Facturaci贸n
+  WHERE ced_cliente = p_ced_cliente;
+  
+  RETURN total_compras;
+END;
+
+--Funcion7 - Promedio de los precios de los materiales
+CREATE OR REPLACE FUNCTION PromedioPreciosMateriales RETURN NUMBER
+IS
+  promedio_precios NUMBER;
+BEGIN
+  SELECT AVG(precio_unidad) INTO promedio_precios
+  FROM Materiales;
+  
+  RETURN promedio_precios;
+END;
+--Funcion7 - Edad de los clientes 
+CREATE OR REPLACE FUNCTION CalcularEdadCliente(
+  p_ced_cliente IN NUMBER
+) RETURN NUMBER
+IS
+  edad NUMBER;
+BEGIN
+  SELECT EXTRACT(YEAR FROM SYSDATE) - EXTRACT(YEAR FROM fecha_nacimiento) INTO edad
+  FROM Clientes
+  WHERE ced_cliente = p_ced_cliente;
+  
+  RETURN edad;
+END;
+
+
 --PAQUETES - Luis
 
 --Paquete1 - Inventario por SKU de producto
 
---Paquete2 - Cotizacion por c閐ula de proveedor
+--Paquete2 - Cotizacion por c茅dula de proveedor
 
 --TRIGGERS - Luis
 
 --Trigger1 - Ejecutar SP ivaTotal (agregar nuevo registro de IVA) cuando se registra una venta en FACTURACION
 
+--TRIGGERS - Dylan
+
+--Trigger2 - Actalizar el estado de la cotizacion si se encuentra vencida
+CREATE OR REPLACE TRIGGER ActualizarEstadoCotizacion
+BEFORE INSERT OR UPDATE ON Cotizaciones
+FOR EACH ROW
+BEGIN
+  IF :NEW.fecha_vencimiento < SYSDATE THEN
+    :NEW.estado_cotizacion := 'Vencida';
+  END IF;
+END;
+/
+-- Trigger3 - alerta en caso de poco producto
+CREATE OR REPLACE TRIGGER ControlStockMinimo
+AFTER INSERT ON Facturaci贸n
+FOR EACH ROW
+DECLARE
+  v_sku_producto VARCHAR2(30);
+  v_unidades_vendidas NUMBER;
+  v_stock_minimo NUMBER;
+BEGIN
+  v_sku_producto := :NEW.sku_producto;
+  v_unidades_vendidas := :NEW.unidades;
+
+  SELECT unidades_disponibles
+  INTO v_stock_minimo
+  FROM Inventario
+  WHERE sku_producto = v_sku_producto;
+
+  IF v_stock_minimo - v_unidades_vendidas < 10 THEN
+    -- Enviar una notificaci贸n al encargado de inventario sobre el bajo stock
+    INSERT INTO NotificacionesInventario (mensaje, fecha_notificacion)
+    VALUES ('Bajo stock: SKU ' || v_sku_producto || ' - Unidades disponibles: ' || v_stock_minimo, SYSDATE);
+  END IF;
+END;
+/
+
+
 --CURSORES - Luis
 
 --Cursor1 - Tomar los materiales descontinuados y trasladarlos a una tabla de auditoria de este tipo de materiales
 
---Cursor2 - Tomar las cotizaciones a vencer en los proximos 10 d韆s a vencer y cargarlo en una tabla destinada a eso
+--Cursor2 - Tomar las cotizaciones a vencer en los proximos 10 d铆as a vencer y cargarlo en una tabla destinada a eso
+
+--CURSORES - Dylan
+
+--Cursor3 -Clientes sin compras
+
+--Cursor4 -Facturas emitidas en el 煤ltimo mes
+
