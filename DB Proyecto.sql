@@ -16,7 +16,7 @@
 --6. Boton Test = Success
 --7. Connect
         
---DROP TABLE CLIENTES CASCADE CONSTRAINTS; --Eliminar tablas con constraints
+--DROP TABLE MATERIALES_DESCON CASCADE CONSTRAINTS; --Eliminar tablas con constraints
 
 CREATE TABLE USUARIOS(
     ced NUMBER PRIMARY KEY,
@@ -127,6 +127,15 @@ CREATE TABLE IVA(
     
     CONSTRAINT iva_pk PRIMARY KEY(consecutivo)
 );
+
+CREATE TABLE MATERIALES_DESCON(
+    sku_producto VARCHAR2(30) PRIMARY KEY,
+    descripcion VARCHAR2(50) NOT NULL,
+    es_combo VARCHAR2(1),
+    precio_unidad NUMBER NOT NULL,
+    fecha_ingreso DATE,
+    descontinuado VARCHAR(1) DEFAULT 'Y');
+
 COMMIT;
 
 --PROCEDIMIENTOS - Luis
@@ -168,7 +177,7 @@ Exec nuevoProductoCon('DFT35X','Tinta blanca','6480');
 
 SELECT * FROM MATERIALES;
 
---SP4 - Actualización de contraseña
+--SP4 - Actualizacion de contrasenha
 CREATE OR REPLACE PROCEDURE actualizarContra(cedula IN NUMBER, contra IN VARCHAR2)
 AS
 BEGIN
@@ -386,10 +395,8 @@ ORDER BY fecha_ingreso ASC;
 -- Vista11 -Factura de cliente 
 CREATE OR REPLACE VIEW FacturasCliente AS
 SELECT ced_cliente, COUNT(*) AS num_facturas_emitidas
-FROM Facturación
+FROM Facturacion
 GROUP BY ced_cliente;
-
-
 
 --FUNCIONES - Luis
 
@@ -490,7 +497,7 @@ BEGIN
   
   RETURN promedio_precios;
 END;
---Funcion7 - Edad de los clientes 
+--Funcion8 - Edad de los clientes 
 CREATE OR REPLACE FUNCTION CalcularEdadCliente(
   p_ced_cliente IN NUMBER
 ) RETURN NUMBER
@@ -504,16 +511,110 @@ BEGIN
   RETURN edad;
 END;
 
-
 --PAQUETES - Luis
 
---Paquete1 - Inventario por SKU de producto
+--Paquete1 - Actualizar inventario por SKU y ver inventario por SKU de producto
+CREATE OR REPLACE PACKAGE disponibilidadSKU AS
 
---Paquete2 - Cotizacion por cédula de proveedor
+    PROCEDURE actualizarUnidades(numSKU VARCHAR2, unidades NUMBER);
+    
+    FUNCTION inventarioSKU(numSKU VARCHAR2)
+    RETURN NUMBER;
+    
+END disponibilidadSKU;
+
+CREATE OR REPLACE PACKAGE BODY disponibilidadSKU AS
+
+PROCEDURE actualizarUnidades(numSKU VARCHAR2, unidades NUMBER)
+AS
+BEGIN
+    UPDATE INVENTARIO
+    SET unidades_disponibles = unidades
+    WHERE sku_producto = numSKU;
+COMMIT;
+END actualizarUnidades;
+
+FUNCTION inventarioSKU(numSKU VARCHAR2)
+RETURN NUMBER 
+IS
+    unidadesSKU NUMBER;
+BEGIN
+    SELECT unidades_disponibles INTO unidadesSKU FROM INVENTARIO
+        WHERE sku_producto = numSKU;
+    RETURN unidadesSKU;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE(SQLERRM);
+END inventarioSKU;
+
+END disponibilidadSKU;
+
+COMMIT;
+
+--Paquete2 - Actualizar cotizacion a recibido/cancelado y ver cotizacion por id_cotizacion
+CREATE OR REPLACE PACKAGE condicionCotizacion AS
+
+PROCEDURE cancelaCotizacion(idCotizacion NUMBER);
+
+PROCEDURE recibeCotizacion(idCotizacion NUMBER);
+
+CURSOR verCotizacion(idCotizacion NUMBER) IS
+    SELECT id_cotizacion,nombre_proveedor,sku_producto,fecha_cotizacion,estado_cotizacion,estado_producto
+    FROM COTIZACIONES
+    INNER JOIN PROVEEDORES USING (ced_proveedor)
+    WHERE id_cotizacion = idCotizacion;
+    
+END condicionCotizacion;
+
+CREATE OR REPLACE PACKAGE BODY condicionCotizacion AS
+
+PROCEDURE cancelaCotizacion(idCotizacion NUMBER)
+AS
+BEGIN
+    UPDATE COTIZACIONES
+    SET estado_cotizacion = 'Cancelado',
+    fecha_recibido = SYSDATE
+    WHERE id_cotizacion = idCotizacion;
+COMMIT;
+END cancelaCotizacion;
+
+PROCEDURE recibeCotizacion(idCotizacion NUMBER)
+AS
+BEGIN
+    UPDATE COTIZACIONES
+    SET estado_cotizacion = 'Completado',
+    fecha_recibido = SYSDATE,
+    estado_producto = 'Recibido sin defectos'
+    WHERE id_cotizacion = idCotizacion;
+COMMIT;
+END recibeCotizacion;
+
+END condicionCotizacion;
+
+COMMIT;
 
 --TRIGGERS - Luis
 
 --Trigger1 - Ejecutar SP ivaTotal (agregar nuevo registro de IVA) cuando se registra una venta en FACTURACION
+CREATE OR REPLACE TRIGGER alimentarIVA
+AFTER INSERT ON FACTURACION
+--REFERENCING NEW AS n  
+
+FOR EACH ROW
+DECLARE
+   numFacturaN NUMBER;
+   precioN NUMBER;
+   skuN VARCHAR2(30);
+   
+BEGIN
+    SELECT num_factura, precio_venta, sku_producto INTO numFacturaN, precioN, skuN 
+        FROM FACTURACION
+        WHERE num_factura = :NEW.num_factura;
+    
+    --Ejecucion de Store Procedure:
+    IVATOTAL(numFacturaN,precioN,skuN);
+    
+END;
 
 --TRIGGERS - Dylan
 
@@ -552,12 +653,61 @@ BEGIN
 END;
 /
 
-
 --CURSORES - Luis
 
 --Cursor1 - Tomar los materiales descontinuados y trasladarlos a una tabla de auditoria de este tipo de materiales
+DECLARE
+    sku VARCHAR2(30);
+    descripcion VARCHAR2(50);
+    combo VARCHAR2(1);
+    precio NUMBER;
+    fecha DATE;
+    
+    CURSOR c_descont IS
+    SELECT sku_producto, descripcion, es_combo, precio_unidad, fecha_registro_producto FROM MATERIALES WHERE descontinuado = 'Y';
+    r_descont c_descont%ROWTYPE;
+BEGIN
+    OPEN c_descont;
+    
+    LOOP
+        FETCH c_descont into r_descont;
+        EXIT WHEN c_descont%NOTFOUND;
+        
+        IF sku IS NOT NULL THEN
+            INSERT INTO MATERIALES_DESCON(sku_producto,descripcion,es_combo,precio_unidad,fecha_ingreso) VALUES(sku,descripcion,combo,precio,fecha);
+            ELSE
+            EXIT;
+        END IF;
+    END LOOP;
+    
+    CLOSE c_descont;
+END;
 
---Cursor2 - Tomar las cotizaciones a vencer en los proximos 10 días a vencer y cargarlo en una tabla destinada a eso
+SELECT * FROM MATERIALES_DESCON;
+
+--Cursor2 - Tomar las cotizaciones a vencer en los proximos 10 dias a vencer y cargarlo en una tabla destinada a eso
+SET  SERVEROUTPUT ON;
+
+DECLARE
+    vence10 SYS_REFCURSOR;
+    
+    idCotizacion COTIZACIONES.id_cotizacion%TYPE;
+    cedProveedor COTIZACIONES.ced_proveedor%TYPE;
+    sku COTIZACIONES.sku_producto%TYPE;
+    fecha_vence COTIZACIONES.fecha_vencimiento%TYPE;
+    dias_para_vencer COTIZACIONES.dias_para_vencimiento%TYPE;
+BEGIN
+    OPEN vence10 FOR SELECT id_cotizacion, ced_proveedor, sku_producto, fecha_vencimiento, dias_para_vencimiento
+        FROM COTIZACIONES
+        WHERE dias_para_vencimiento BETWEEN 1 AND 10;
+    
+    FETCH vence10 INTO idCotizacion, cedProveedor, sku, fecha_vence, dias_para_vencer;
+    
+    CLOSE vence10;
+    
+    DBMS_OUTPUT.PUT_LINE('ID Cotizacion: ' || idCotizacion || '. Ced Proveedor: ' || 
+    cedProveedor || '. Producto: ' || sku || '. Vence el: ' || fecha_vence || '. Dias para vencer: ' || dias_para_vencer);
+END;
 
 --CURSORES - Dylan
 
