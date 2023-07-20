@@ -592,6 +592,86 @@ END recibeCotizacion;
 END condicionCotizacion;
 
 COMMIT;
+--PAQUETES - Dylan 
+--Paquete3 - Gestión de clientes y facturación.
+CREATE OR REPLACE PACKAGE Clientes_Facturas_Package IS
+  -- Registrar un nuevo cliente y su factura
+  PROCEDURE RegistrarClienteConFactura(
+    p_ced_cliente NUMBER,
+    p_nombre_cliente VARCHAR2,
+    p_fecha_nacimiento DATE,
+    p_telefono VARCHAR2,
+    p_email VARCHAR2,
+    p_direccion VARCHAR2,
+    p_distrito VARCHAR2,
+    p_canton VARCHAR2,
+    p_provincia VARCHAR2,
+    p_sku_producto VARCHAR2,
+    p_precio_venta NUMBER,
+    p_unidades NUMBER
+  );
+
+  -- Obtener detalles de una factura con el nombre del cliente
+  FUNCTION ObtenerDetallesFacturaCliente(
+    p_num_factura NUMBER
+  ) RETURN SYS_REFCURSOR;
+  
+  -- Obtener total de ventas por cliente en un rango de fechas
+  FUNCTION ObtenerTotalVentasCliente(
+    p_ced_cliente NUMBER,
+    p_fecha_inicio DATE,
+    p_fecha_fin DATE
+  ) RETURN NUMBER;
+  
+  -- Obtener clientes con mayor monto de compras
+  FUNCTION ObtenerClientesMayoresCompras(
+    p_cantidad_clientes NUMBER
+  ) RETURN SYS_REFCURSOR;
+  
+END Clientes_Facturas_Package;
+/
+--Paquete4 - Permite agregar ,actualizar o obtener detalles con respecto a proveedores 
+CREATE OR REPLACE PACKAGE Proveedores_Package IS
+  -- Registrar un nuevo proveedor
+  PROCEDURE RegistrarProveedor(
+    p_ced_proveedor NUMBER,
+    p_tipo_ced VARCHAR2,
+    p_nombre_proveedor VARCHAR2,
+    p_telefono VARCHAR2,
+    p_email VARCHAR2,
+    p_direccion VARCHAR2,
+    p_distrito VARCHAR2,
+    p_canton VARCHAR2,
+    p_provincia VARCHAR2
+  );
+
+  -- Obtener detalles de un proveedor
+  FUNCTION ObtenerDetallesProveedor(
+    p_ced_proveedor NUMBER
+  ) RETURN SYS_REFCURSOR;
+  
+  -- Actualizar información de un proveedor
+  PROCEDURE ActualizarProveedor(
+    p_ced_proveedor NUMBER,
+    p_telefono VARCHAR2,
+    p_email VARCHAR2,
+    p_direccion VARCHAR2
+  );
+  
+  -- Obtener proveedores con más cotizaciones
+  FUNCTION ObtenerProveedoresConMasCotizaciones(
+    p_cantidad_proveedores NUMBER
+  ) RETURN SYS_REFCURSOR;
+  
+  -- Obtener proveedores por provincia
+  FUNCTION ObtenerProveedoresPorProvincia(
+    p_provincia VARCHAR2
+  ) RETURN SYS_REFCURSOR;
+  
+END Proveedores_Package;
+/
+
+
 
 --TRIGGERS - Luis
 
@@ -712,6 +792,62 @@ END;
 --CURSORES - Dylan
 
 --Cursor3 -Clientes sin compras
+DECLARE
+  CURSOR clientes_sin_compras_cursor IS
+    SELECT *
+    FROM Clientes c
+    WHERE NOT EXISTS (
+      SELECT 1
+      FROM Facturación f
+      WHERE c.ced_cliente = f.ced_cliente
+    );
+  
+  cliente_sin_compras Clientes%ROWTYPE;
+BEGIN
+  OPEN clientes_sin_compras_cursor;
+  
+  LOOP
+    FETCH clientes_sin_compras_cursor INTO cliente_sin_compras;
+    EXIT WHEN clientes_sin_compras_cursor%NOTFOUND;
+    
+    -- Imprimir la información del cliente sin compras
+    DBMS_OUTPUT.PUT_LINE('Cliente sin Compras:');
+    DBMS_OUTPUT.PUT_LINE('Cédula: ' || cliente_sin_compras.ced_cliente);
+    DBMS_OUTPUT.PUT_LINE('Nombre: ' || cliente_sin_compras.nombre_cliente);
+    
+  END LOOP;
+  
+  CLOSE clientes_sin_compras_cursor;
+END;
+/
+
+
 
 --Cursor4 -Facturas emitidas en el último mes
+DECLARE
+  CURSOR facturas_ultimo_mes_cursor IS
+    SELECT *
+    FROM Facturación
+    WHERE fecha_venta >= ADD_MONTHS(TRUNC(SYSDATE, 'MONTH'), -1);
+  
+  factura_ultimo_mes Facturación%ROWTYPE;
+BEGIN
+  OPEN facturas_ultimo_mes_cursor;
+  
+  LOOP
+    FETCH facturas_ultimo_mes_cursor INTO factura_ultimo_mes;
+    EXIT WHEN facturas_ultimo_mes_cursor%NOTFOUND;
+    
+    -- Imprimir la información de la factura emitida en el último mes
+    DBMS_OUTPUT.PUT_LINE('Factura Emitida en el Último Mes:');
+    DBMS_OUTPUT.PUT_LINE('Número: ' || factura_ultimo_mes.num_factura);
+    DBMS_OUTPUT.PUT_LINE('Cédula Cliente: ' || factura_ultimo_mes.ced_cliente);
+    
+  END LOOP;
+  
+  CLOSE facturas_ultimo_mes_cursor;
+END;
+/
+
+
 
