@@ -508,6 +508,14 @@
 <td class="currentcell">FACTURACION</td>
 </tr>
 <tr onclick="table_onSelectMasterRow(this, 12, 1)">
+<td>ACTUALIZARUNIDADESDISPONIBLES</td>
+<td>AFTER&nbsp;EACH&nbsp;ROW</td>
+<td>DBAPROY</td>
+<td>INSERT</td>
+<td>ENABLED</td>
+<td>FACTURACION</td>
+</tr>
+<tr onclick="table_onSelectMasterRow(this, 12, 2)">
 <td>CONTROLSTOCKMINIMO</td>
 <td>AFTER&nbsp;EACH&nbsp;ROW</td>
 <td>DBAPROY</td>
@@ -550,6 +558,25 @@ END;</pre>
 </div>
 </div>
 <div id="Child.0.1.4">
+<div class="childreport"><pre>
+TRIGGER ActualizarUnidadesDisponibles
+AFTER INSERT ON Facturacion
+FOR EACH ROW
+DECLARE
+  v_sku_producto INT;
+  v_unidades_vendidas INT;
+BEGIN
+  v_sku_producto := :NEW.sku_producto;
+  v_unidades_vendidas := :NEW.unidades;
+
+  UPDATE Inventario
+  SET unidades_disponibles = unidades_disponibles - v_unidades_vendidas
+  WHERE sku_producto = v_sku_producto;
+END;
+</pre>
+</div>
+</div>
+<div id="Child.0.2.4">
 <div class="childreport"><pre>
 TRIGGER ControlStockMinimo
 AFTER INSERT ON Facturacion
@@ -649,6 +676,30 @@ END;</pre>
 <td>DBAPROY</td>
 <td>CONTROLSTOCKMINIMO</td>
 <td>TRIGGER</td>
+<td>DBAPROY</td>
+<td>FACTURACION</td>
+<td>TABLE</td>
+</tr>
+<tr onclick="table_onSelectMasterRow(this, 13, 8)">
+<td>DBAPROY</td>
+<td>CALCULARPRECIOTOTALFACTURA</td>
+<td>FUNCTION</td>
+<td>DBAPROY</td>
+<td>FACTURACION</td>
+<td>TABLE</td>
+</tr>
+<tr onclick="table_onSelectMasterRow(this, 13, 9)">
+<td>DBAPROY</td>
+<td>ACTUALIZARUNIDADESDISPONIBLES</td>
+<td>TRIGGER</td>
+<td>DBAPROY</td>
+<td>FACTURACION</td>
+<td>TABLE</td>
+</tr>
+<tr onclick="table_onSelectMasterRow(this, 13, 10)">
+<td>DBAPROY</td>
+<td>VENTASPORDIASEMANA</td>
+<td>VIEW</td>
 <td>DBAPROY</td>
 <td>FACTURACION</td>
 <td>TABLE</td>
@@ -769,12 +820,51 @@ END;</pre>
 </table>
 </div>
 </div>
+<div id="Child.0.8.5">
+<div class="childreport"><table id="Table.22" cellpadding="0" cellspacing="0" summary="">
+<tr>
+<th>OWNER</th>
+<th>NAME</th>
+<th>TYPE</th>
+<th>REFERENCED_OWNER</th>
+<th>REFERENCED_NAME</th>
+<th>REFERENCED_TYPE</th>
+</tr>
+</table>
+</div>
+</div>
+<div id="Child.0.9.5">
+<div class="childreport"><table id="Table.23" cellpadding="0" cellspacing="0" summary="">
+<tr>
+<th>OWNER</th>
+<th>NAME</th>
+<th>TYPE</th>
+<th>REFERENCED_OWNER</th>
+<th>REFERENCED_NAME</th>
+<th>REFERENCED_TYPE</th>
+</tr>
+</table>
+</div>
+</div>
+<div id="Child.0.10.5">
+<div class="childreport"><table id="Table.24" cellpadding="0" cellspacing="0" summary="">
+<tr>
+<th>OWNER</th>
+<th>NAME</th>
+<th>TYPE</th>
+<th>REFERENCED_OWNER</th>
+<th>REFERENCED_NAME</th>
+<th>REFERENCED_TYPE</th>
+</tr>
+</table>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="Master.6">
 <div class="masterreport">
-<table id="Table.22" cellpadding="0" cellspacing="0" summary="">
+<table id="Table.25" cellpadding="0" cellspacing="0" summary="">
 <th>NAME</th>
 <th>VALUE</th>
 </tr>
@@ -1031,7 +1121,7 @@ END;</pre>
 </div>
 <div id="Master.7">
 <div class="masterreport">
-<table id="Table.23" cellpadding="0" cellspacing="0" summary="">
+<table id="Table.26" cellpadding="0" cellspacing="0" summary="">
 <tr>
 <th>PARTITION_NAME</th>
 <th>LAST_ANALYZED</th>
@@ -1057,7 +1147,7 @@ END;</pre>
 </div>
 <div id="Master.8">
 <div class="masterreport">
-<table id="Table.24" cellpadding="0" cellspacing="0" summary="">
+<table id="Table.27" cellpadding="0" cellspacing="0" summary="">
 <tr>
 <th>INDEX_OWNER</th>
 <th>INDEX_NAME</th>
@@ -1070,7 +1160,7 @@ END;</pre>
 <th>JOIN_INDEX</th>
 <th>COLUMNS</th>
 </tr>
-<tr onclick="table_onSelectMasterRow(this, 24, 0)" class="currentrow">
+<tr onclick="table_onSelectMasterRow(this, 27, 0)" class="currentrow">
 <td class="currentcell">DBAPROY</td>
 <td class="currentcell">FACTURA_PK</td>
 <td class="currentcell">UNIQUE</td>
@@ -1095,7 +1185,7 @@ END;</pre>
 <br/>
 <div id="ChildReports.8">
 <div id="Child.0.0.8">
-<div class="currentchildreport"><table id="Table.25" cellpadding="0" cellspacing="0" summary="">
+<div class="currentchildreport"><table id="Table.28" cellpadding="0" cellspacing="0" summary="">
 <tr>
 <th>INDEX_OWNER</th>
 <th>INDEX_NAME</th>
@@ -1109,7 +1199,7 @@ END;</pre>
 <th>COLLATED_COLUMN_ID</th>
 <th>COLUMN_EXPRESSION</th>
 </tr>
-<tr onclick="table_onSelectRow(this, 25)" class="currentrow">
+<tr onclick="table_onSelectRow(this, 28)" class="currentrow">
 <td class="currentcell">DBAPROY</td>
 <td class="currentcell">FACTURA_PK</td>
 <td class="currentcell">DBAPROY</td>
@@ -1122,7 +1212,7 @@ END;</pre>
 <td class="currentcell">null</td>
 <td class="currentcell">null</td>
 </tr>
-<tr onclick="table_onSelectRow(this, 25)">
+<tr onclick="table_onSelectRow(this, 28)">
 <td>DBAPROY</td>
 <td>FACTURA_PK</td>
 <td>DBAPROY</td>
@@ -1135,7 +1225,7 @@ END;</pre>
 <td>null</td>
 <td>null</td>
 </tr>
-<tr onclick="table_onSelectRow(this, 25)">
+<tr onclick="table_onSelectRow(this, 28)">
 <td>DBAPROY</td>
 <td>FACTURA_PK</td>
 <td>DBAPROY</td>

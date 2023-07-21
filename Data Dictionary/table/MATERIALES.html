@@ -410,21 +410,29 @@
 </tr>
 <tr onclick="table_onSelectMasterRow(this, 8, 7)">
 <td>DBAPROY</td>
-<td>INVENTARIOINSUFICIENTE</td>
-<td>VIEW</td>
-<td>DBAPROY</td>
-<td>MATERIALES</td>
-<td>TABLE</td>
-</tr>
-<tr onclick="table_onSelectMasterRow(this, 8, 8)">
-<td>DBAPROY</td>
 <td>DESCONTINUARMATERIAL</td>
 <td>PROCEDURE</td>
 <td>DBAPROY</td>
 <td>MATERIALES</td>
 <td>TABLE</td>
 </tr>
+<tr onclick="table_onSelectMasterRow(this, 8, 8)">
+<td>DBAPROY</td>
+<td>INVENTARIOINSUFICIENTE</td>
+<td>VIEW</td>
+<td>DBAPROY</td>
+<td>MATERIALES</td>
+<td>TABLE</td>
+</tr>
 <tr onclick="table_onSelectMasterRow(this, 8, 9)">
+<td>DBAPROY</td>
+<td>PROMEDIOPRECIOSMATERIALES</td>
+<td>FUNCTION</td>
+<td>DBAPROY</td>
+<td>MATERIALES</td>
+<td>TABLE</td>
+</tr>
+<tr onclick="table_onSelectMasterRow(this, 8, 10)">
 <td>DBAPROY</td>
 <td>COTIZACIONESPENDIENTES</td>
 <td>VIEW</td>
@@ -432,10 +440,18 @@
 <td>MATERIALES</td>
 <td>TABLE</td>
 </tr>
-<tr onclick="table_onSelectMasterRow(this, 8, 10)">
+<tr onclick="table_onSelectMasterRow(this, 8, 11)">
 <td>DBAPROY</td>
-<td>PROMEDIOPRECIOSMATERIALES</td>
-<td>FUNCTION</td>
+<td>GESTIONMATERIALES</td>
+<td>PACKAGE</td>
+<td>DBAPROY</td>
+<td>MATERIALES</td>
+<td>TABLE</td>
+</tr>
+<tr onclick="table_onSelectMasterRow(this, 8, 12)">
+<td>DBAPROY</td>
+<td>GESTIONMATERIALES</td>
+<td>PACKAGE&nbsp;BODY</td>
 <td>DBAPROY</td>
 <td>MATERIALES</td>
 <td>TABLE</td>
@@ -595,12 +611,38 @@
 </table>
 </div>
 </div>
+<div id="Child.0.11.5">
+<div class="childreport"><table id="Table.20" cellpadding="0" cellspacing="0" summary="">
+<tr>
+<th>OWNER</th>
+<th>NAME</th>
+<th>TYPE</th>
+<th>REFERENCED_OWNER</th>
+<th>REFERENCED_NAME</th>
+<th>REFERENCED_TYPE</th>
+</tr>
+</table>
+</div>
+</div>
+<div id="Child.0.12.5">
+<div class="childreport"><table id="Table.21" cellpadding="0" cellspacing="0" summary="">
+<tr>
+<th>OWNER</th>
+<th>NAME</th>
+<th>TYPE</th>
+<th>REFERENCED_OWNER</th>
+<th>REFERENCED_NAME</th>
+<th>REFERENCED_TYPE</th>
+</tr>
+</table>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="Master.6">
 <div class="masterreport">
-<table id="Table.20" cellpadding="0" cellspacing="0" summary="">
+<table id="Table.22" cellpadding="0" cellspacing="0" summary="">
 <th>NAME</th>
 <th>VALUE</th>
 </tr>
@@ -857,7 +899,7 @@
 </div>
 <div id="Master.7">
 <div class="masterreport">
-<table id="Table.21" cellpadding="0" cellspacing="0" summary="">
+<table id="Table.23" cellpadding="0" cellspacing="0" summary="">
 <tr>
 <th>PARTITION_NAME</th>
 <th>LAST_ANALYZED</th>
@@ -883,7 +925,7 @@
 </div>
 <div id="Master.8">
 <div class="masterreport">
-<table id="Table.22" cellpadding="0" cellspacing="0" summary="">
+<table id="Table.24" cellpadding="0" cellspacing="0" summary="">
 <tr>
 <th>INDEX_OWNER</th>
 <th>INDEX_NAME</th>
@@ -896,7 +938,7 @@
 <th>JOIN_INDEX</th>
 <th>COLUMNS</th>
 </tr>
-<tr onclick="table_onSelectMasterRow(this, 22, 0)" class="currentrow">
+<tr onclick="table_onSelectMasterRow(this, 24, 0)" class="currentrow">
 <td class="currentcell">DBAPROY</td>
 <td class="currentcell">SYS_C007819</td>
 <td class="currentcell">UNIQUE</td>
@@ -921,7 +963,7 @@
 <br/>
 <div id="ChildReports.8">
 <div id="Child.0.0.8">
-<div class="currentchildreport"><table id="Table.23" cellpadding="0" cellspacing="0" summary="">
+<div class="currentchildreport"><table id="Table.25" cellpadding="0" cellspacing="0" summary="">
 <tr>
 <th>INDEX_OWNER</th>
 <th>INDEX_NAME</th>
@@ -935,7 +977,7 @@
 <th>COLLATED_COLUMN_ID</th>
 <th>COLUMN_EXPRESSION</th>
 </tr>
-<tr onclick="table_onSelectRow(this, 23)" class="currentrow">
+<tr onclick="table_onSelectRow(this, 25)" class="currentrow">
 <td class="currentcell">DBAPROY</td>
 <td class="currentcell">SYS_C007819</td>
 <td class="currentcell">DBAPROY</td>
