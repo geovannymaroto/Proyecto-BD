@@ -309,6 +309,42 @@ BEGIN
   COMMIT;
 END;
 /
+--SP10 --Obtener proveedores por tipo de cédula
+
+CREATE PROCEDURE ObtenerProveedoresPorTipoCedula(IN tipo_cedula VARCHAR(50))
+BEGIN 
+    DECLARE tipo_cedula_encontrado INT;
+    SET tipo_cedula_encontrado = (SELECT COUNT(*) FROM proveedores WHERE tipo_ced = tipo_cedula);
+    IF tipo_cedula_encontrado > 0 THEN
+        SELECT ced_proveedor AS 'Cédula Proveedor',
+               nombre_proveedor AS 'Nombre Proveedor',
+               telefono AS 'Teléfono Proveedor',
+               correo AS 'Correo Proveedor'
+        FROM proveedores
+        WHERE tipo_ced = tipo_cedula;
+    ELSE
+        SELECT 'No se encontrarían proveedores con este tipo de cédula' AS 'Mensaje';
+    END IF;
+END;
+
+--SP11 --Obtener proveedores por distrito
+CREATE PROCEDURE ObtenerEmpleadosPorDepartamento(IN departamento VARCHAR(50))
+BEGIN
+    DECLARE departamento_encontrado INT;
+    SET departamento_encontrado = (SELECT COUNT(*) FROM empleados WHERE departamento = departamento);
+    IF departamento_encontrado > 0 THEN
+        SELECT cedula AS 'Cédula Empleado',
+               nombre AS 'Nombre Empleado',
+               distrito AS 'Distrito Empleado',
+               telefono AS 'Teléfono Empleado'
+        FROM empleados
+        WHERE departamento = departamento;
+    ELSE
+        SELECT 'No se encontrarían empleados en este departamento' AS 'Mensaje';
+    END IF;
+END;
+
+
 
 
 --VISTAS - Luis
@@ -656,7 +692,7 @@ CREATE OR REPLACE PACKAGE Proveedores_Package IS
     p_ced_proveedor NUMBER
   ) RETURN SYS_REFCURSOR;
   
-  -- Actualizar información de un proveedor
+  -- Actualizar informaciÃ³n de un proveedor
   PROCEDURE ActualizarProveedor(
     p_ced_proveedor NUMBER,
     p_telefono VARCHAR2,
@@ -664,7 +700,7 @@ CREATE OR REPLACE PACKAGE Proveedores_Package IS
     p_direccion VARCHAR2
   );
   
-  -- Obtener proveedores con más cotizaciones
+  -- Obtener proveedores con mÃ¡s cotizaciones
   FUNCTION ObtenerProveedoresConMasCotizaciones(
     p_cantidad_proveedores NUMBER
   ) RETURN SYS_REFCURSOR;
@@ -716,7 +752,7 @@ CREATE OR REPLACE PACKAGE UDisponibles_Package AS
   --actualizar las unidades disponibles de un producto
   PROCEDURE ActualizarUnidadesDisponibles(sku_producto IN INT, nuevas_unidades IN INT);
   
-  --informaci�n detallada de un material
+  --información detallada de un material
   FUNCTION ObtenerMaterial(sku_producto IN INT) RETURN Materiales%ROWTYPE;
   
   --listado de materiales disponibles
@@ -779,7 +815,7 @@ BEGIN
   WHERE sku_producto = v_sku_producto;
 
   IF v_stock_minimo - v_unidades_vendidas < 10 THEN
-    -- Enviar una notificación al encargado de inventario sobre el bajo stock
+    -- Enviar una notificaciÃ³n al encargado de inventario sobre el bajo stock
     INSERT INTO NotificacionesInventario (mensaje, fecha_notificacion)
     VALUES ('Bajo stock: SKU ' || v_sku_producto || ' - Unidades disponibles: ' || v_stock_minimo, SYSDATE);
   END IF;
@@ -882,9 +918,8 @@ BEGIN
     FETCH clientes_sin_compras_cursor INTO cliente_sin_compras;
     EXIT WHEN clientes_sin_compras_cursor%NOTFOUND;
     
-    -- Imprimir la información del cliente sin compras
     DBMS_OUTPUT.PUT_LINE('Cliente sin Compras:');
-    DBMS_OUTPUT.PUT_LINE('Cédula: ' || cliente_sin_compras.ced_cliente);
+    DBMS_OUTPUT.PUT_LINE('CÃ©dula: ' || cliente_sin_compras.ced_cliente);
     DBMS_OUTPUT.PUT_LINE('Nombre: ' || cliente_sin_compras.nombre_cliente);
     
   END LOOP;
@@ -893,7 +928,7 @@ BEGIN
 END;
 /
 
---Cursor4 -Facturas emitidas en el último mes
+--Cursor4 -Facturas emitidas en el ultimo mes
 DECLARE
   CURSOR facturas_ultimo_mes_cursor IS
     SELECT *
@@ -907,17 +942,37 @@ BEGIN
   LOOP
     FETCH facturas_ultimo_mes_cursor INTO factura_ultimo_mes;
     EXIT WHEN facturas_ultimo_mes_cursor%NOTFOUND;
-    
-    -- Imprimir la información de la factura emitida en el último mes
+
     DBMS_OUTPUT.PUT_LINE('Factura Emitida en el ultimo Mes:');
     DBMS_OUTPUT.PUT_LINE('Numero: ' || factura_ultimo_mes.num_factura);
-    DBMS_OUTPUT.PUT_LINE('Cédula Cliente: ' || factura_ultimo_mes.ced_cliente);
+    DBMS_OUTPUT.PUT_LINE('CÃ©dula Cliente: ' || factura_ultimo_mes.ced_cliente);
     
   END LOOP;
   
   CLOSE facturas_ultimo_mes_cursor;
 END;
 /
+--Cursor5 -Materiales más vendidos
+DECLARE
+  CURSOR materiales_mas_vendidos_cursor IS
+    SELECT m.sku_producto, m.descripcion, SUM(f.cantidad) AS total_vendido
+    FROM Materiales m
+    JOIN Facturacion f ON m.sku_producto = f.sku_producto
+    GROUP BY m.sku_producto, m.descripcion
+    ORDER BY total_vendido DESC;
+  material_mas_vendido materiales_mas_vendidos_cursor%ROWTYPE;
+BEGIN
+  OPEN materiales_mas_vendidos_cursor;
+  LOOP
+    FETCH materiales_mas_vendidos_cursor INTO material_mas_vendido;
+    EXIT WHEN materiales_mas_vendidos_cursor%NOTFOUND;
+    DBMS_OUTPUT.PUT_LINE('Material más vendido - SKU: ' || material_mas_vendido.sku_producto || ', Descripción: ' || material_mas_vendido.descripcion || ', Total Vendido: ' || material_mas_vendido.total_vendido);
+  END LOOP;
+
+  CLOSE materiales_mas_vendidos_cursor;
+END;
+/
+
 
 --CURSORES - Maria
 
@@ -937,8 +992,8 @@ BEGIN
     FETCH cotizaciones_cursor INTO cotizacion;
     EXIT WHEN cotizaciones_cursor%NOTFOUND;
 
-    --Imprimir la informaci�n de la cotizaci�n
-    DBMS_OUTPUT.PUT_LINE('Cotizaci�n Vencida:');
+    --Imprimir la información de la cotización
+    DBMS_OUTPUT.PUT_LINE('Cotización Vencida:');
     DBMS_OUTPUT.PUT_LINE('ID: ' || cotizacion.id_cotizacion);
   
   END LOOP;
@@ -966,9 +1021,9 @@ BEGIN
     FETCH clientes_cursor INTO cliente;
     EXIT WHEN clientes_cursor%NOTFOUND;
     
-    -- Imprimir la informaci�n del cliente
-    DBMS_OUTPUT.PUT_LINE('Cliente con M�s Compras:');
-    DBMS_OUTPUT.PUT_LINE('C�dula: ' || cliente.ced_cliente);
+    -- Imprimir la información del cliente
+    DBMS_OUTPUT.PUT_LINE('Cliente con Más Compras:');
+    DBMS_OUTPUT.PUT_LINE('Cédula: ' || cliente.ced_cliente);
     DBMS_OUTPUT.PUT_LINE('Nombre: ' || cliente.nombre_cliente);
     -- ... otros campos
     
@@ -996,10 +1051,10 @@ BEGIN
     FETCH materiales_cursor INTO material;
     EXIT WHEN materiales_cursor%NOTFOUND;
     
-    -- Imprimir la informaci�n del material
+    -- Imprimir la información del material
     DBMS_OUTPUT.PUT_LINE('Material Descontinuado:');
     DBMS_OUTPUT.PUT_LINE('SKU: ' || material.sku_producto);
-    DBMS_OUTPUT.PUT_LINE('Descripci�n: ' || material.descripcion);
+    DBMS_OUTPUT.PUT_LINE('Descripción: ' || material.descripcion);
     
   END LOOP;
   
