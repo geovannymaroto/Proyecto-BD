@@ -275,9 +275,10 @@ BEGIN
   
 COMMIT;
 END;
+
 --PROCEDIMIENTOS - Dylan
 
---SP8 -Actualizar el precio de un material
+--SP9 -Actualizar el precio de un material
 CREATE OR REPLACE PROCEDURE ActualizarPrecioMaterial(
   p_sku_producto IN VARCHAR2,
   p_nuevo_precio IN NUMBER
@@ -291,7 +292,7 @@ BEGIN
   COMMIT;
 END;
 /
---SP9 -Registro cotizacion
+--SP10 -Registro cotizacion
 CREATE OR REPLACE PROCEDURE RegistrarCotizacion(
   p_id_cotizacion IN NUMBER,
   p_ced_proveedor IN NUMBER,
@@ -356,7 +357,8 @@ FROM Inventario I
 JOIN Materiales M ON I.sku_producto = M.sku_producto
 WHERE I.unidades_disponibles < 10; -- Umbral de unidades disponibles ajustable
 
--- VISTAS -Dylan 
+-- VISTAS -Dylan
+
 --Vista6 - ventas por cliente y mes
 CREATE OR REPLACE VIEW VentasPorClienteMes AS
 SELECT c.ced_cliente, c.nombre_cliente, EXTRACT(MONTH FROM f.fecha_venta) AS mes, SUM(f.precio_venta) AS total_ventas
@@ -373,7 +375,7 @@ JOIN FACTURACION f ON m.sku_producto = f.sku_producto
 GROUP BY m.sku_producto, m.descripcion
 ORDER BY SUM(f.unidades) DESC;
 
---Vista8 -Clientes con compras frecuentes 
+--Vista8 - Clientes con compras frecuentes 
 CREATE OR REPLACE VIEW ClientesComprasFrecuentes AS
 SELECT c.*
 FROM CLIENTES c
@@ -498,6 +500,7 @@ BEGIN
   
   RETURN promedio_precios;
 END;
+
 --Funcion8 - Edad de los clientes 
 CREATE OR REPLACE FUNCTION CalcularEdadCliente(
   p_ced_cliente IN NUMBER
@@ -674,8 +677,6 @@ CREATE OR REPLACE PACKAGE Proveedores_Package IS
 END Proveedores_Package;
 /
 
-
-
 --TRIGGERS - Luis
 
 --Trigger1 - Ejecutar SP ivaTotal (agregar nuevo registro de IVA) cuando se registra una venta en FACTURACION
@@ -825,8 +826,6 @@ BEGIN
 END;
 /
 
-
-
 --Cursor4 -Facturas emitidas en el último mes
 DECLARE
   CURSOR facturas_ultimo_mes_cursor IS
@@ -834,7 +833,7 @@ DECLARE
     FROM Facturacion
     WHERE fecha_venta >= ADD_MONTHS(TRUNC(SYSDATE, 'MONTH'), -1);
   
-  factura_ultimo_mes Facturación%ROWTYPE;
+  factura_ultimo_mes Facturacion%ROWTYPE;
 BEGIN
   OPEN facturas_ultimo_mes_cursor;
   
@@ -843,8 +842,8 @@ BEGIN
     EXIT WHEN facturas_ultimo_mes_cursor%NOTFOUND;
     
     -- Imprimir la información de la factura emitida en el último mes
-    DBMS_OUTPUT.PUT_LINE('Factura Emitida en el Último Mes:');
-    DBMS_OUTPUT.PUT_LINE('Número: ' || factura_ultimo_mes.num_factura);
+    DBMS_OUTPUT.PUT_LINE('Factura Emitida en el ultimo Mes:');
+    DBMS_OUTPUT.PUT_LINE('Numero: ' || factura_ultimo_mes.num_factura);
     DBMS_OUTPUT.PUT_LINE('Cédula Cliente: ' || factura_ultimo_mes.ced_cliente);
     
   END LOOP;
