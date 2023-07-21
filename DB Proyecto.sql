@@ -264,14 +264,13 @@ COMMIT;
 END;
 
 --SP8 - Descontinuar un producto
---DIO ERROR
 
 CREATE OR REPLACE PROCEDURE DescontinuarMaterial(
   p_sku_producto IN INT
 ) AS
 BEGIN
   UPDATE Materiales
-  SET descontinuado = TRUE
+  SET descontinuado = 'Y'
   WHERE sku_producto = p_sku_producto;
   
 COMMIT;
@@ -292,8 +291,8 @@ BEGIN
   COMMIT;
 END;
 /
---SP9 -Registro cotización
-        CREATE OR REPLACE PROCEDURE RegistrarCotizacion(
+--SP9 -Registro cotizacion
+CREATE OR REPLACE PROCEDURE RegistrarCotizacion(
   p_id_cotizacion IN NUMBER,
   p_ced_proveedor IN NUMBER,
   p_sku_producto IN VARCHAR2,
@@ -379,7 +378,8 @@ SELECT c.*
 FROM CLIENTES c
 WHERE EXISTS (SELECT 1 FROM FACTURACION f WHERE f.ced_cliente = c.ced_cliente GROUP BY f.ced_cliente HAVING COUNT(*) > 5);
 
---Vista9 - Ventas del dia 
+--Vista9 - Ventas del dia
+--Dio error
 CREATE OR REPLACE VIEW VentasPorDiaSemana AS
 SELECT TO_CHAR(fecha_venta, 'DAY') AS dia_semana, SUM(precio_venta) AS total_ventas
 FROM FACTURACION
@@ -481,7 +481,7 @@ IS
   total_compras NUMBER;
 BEGIN
   SELECT COUNT(*) INTO total_compras
-  FROM Facturación
+  FROM Facturacion
   WHERE ced_cliente = p_ced_cliente;
   
   RETURN total_compras;
@@ -592,8 +592,10 @@ END recibeCotizacion;
 END condicionCotizacion;
 
 COMMIT;
---PAQUETES - Dylan 
---Paquete3 - Gestión de clientes y facturación.
+
+--PAQUETES - Dylan
+
+--Paquete3 - Gestion de clientes y facturacion.
 CREATE OR REPLACE PACKAGE Clientes_Facturas_Package IS
   -- Registrar un nuevo cliente y su factura
   PROCEDURE RegistrarClienteConFactura(
@@ -709,8 +711,9 @@ BEGIN
 END;
 /
 -- Trigger3 - alerta en caso de poco producto
+--Dio error
 CREATE OR REPLACE TRIGGER ControlStockMinimo
-AFTER INSERT ON Facturación
+AFTER INSERT ON Facturacion
 FOR EACH ROW
 DECLARE
   v_sku_producto VARCHAR2(30);
@@ -798,7 +801,7 @@ DECLARE
     FROM Clientes c
     WHERE NOT EXISTS (
       SELECT 1
-      FROM Facturación f
+      FROM Facturacion f
       WHERE c.ced_cliente = f.ced_cliente
     );
   
@@ -827,7 +830,7 @@ END;
 DECLARE
   CURSOR facturas_ultimo_mes_cursor IS
     SELECT *
-    FROM Facturación
+    FROM Facturacion
     WHERE fecha_venta >= ADD_MONTHS(TRUNC(SYSDATE, 'MONTH'), -1);
   
   factura_ultimo_mes Facturación%ROWTYPE;
@@ -849,5 +852,4 @@ BEGIN
 END;
 /
 
-
-
+COMMIT;
