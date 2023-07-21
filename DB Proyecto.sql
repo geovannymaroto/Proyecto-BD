@@ -364,6 +364,7 @@ FROM CLIENTES c
 JOIN FACTURACION f ON c.ced_cliente = f.ced_cliente
 GROUP BY c.ced_cliente, c.nombre_cliente, EXTRACT(MONTH FROM f.fecha_venta);
 
+
 --Vista7 - Productos mas vendidos 
 CREATE OR REPLACE VIEW ProductosMasVendidos AS
 SELECT m.sku_producto, m.descripcion, SUM(f.unidades) AS total_vendido
