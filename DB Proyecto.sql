@@ -415,12 +415,12 @@ FROM CLIENTES c
 WHERE EXISTS (SELECT 1 FROM FACTURACION f WHERE f.ced_cliente = c.ced_cliente GROUP BY f.ced_cliente HAVING COUNT(*) > 5);
 
 --Vista9 - Ventas del dia
---Dio error
 CREATE OR REPLACE VIEW VentasPorDiaSemana AS
 SELECT TO_CHAR(fecha_venta, 'DAY') AS dia_semana, SUM(precio_venta) AS total_ventas
 FROM FACTURACION
 GROUP BY TO_CHAR(fecha_venta, 'DAY')
-ORDER BY TO_CHAR(fecha_venta, 'D');
+ORDER BY TO_CHAR(fecha_venta, 'DAY');
+
 
 --Vista10 - Antiguedad de clientes 
 CREATE OR REPLACE VIEW ProveedoresMasAntiguos AS
