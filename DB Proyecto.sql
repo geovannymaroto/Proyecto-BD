@@ -1011,7 +1011,7 @@ BEGIN
   LOOP
     FETCH materiales_mas_vendidos_cursor INTO material_mas_vendido;
     EXIT WHEN materiales_mas_vendidos_cursor%NOTFOUND;
-    DBMS_OUTPUT.PUT_LINE('Material mÃ¡s vendido - SKU: ' || material_mas_vendido.sku_producto || ', Descripcion: ' || material_mas_vendido.descripcion || ', Total Vendido: ' || material_mas_vendido.total_vendido);
+    DBMS_OUTPUT.PUT_LINE('Material mas vendido - SKU: ' || material_mas_vendido.sku_producto || ', Descripcion: ' || material_mas_vendido.descripcion || ', Total Vendido: ' || material_mas_vendido.total_vendido);
   END LOOP;
 
   CLOSE materiales_mas_vendidos_cursor;
