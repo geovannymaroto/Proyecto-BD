@@ -294,6 +294,8 @@ BEGIN
 END;
 /
 --SP10 -Registro cotizacion
+
+
 CREATE OR REPLACE PROCEDURE RegistrarCotizacion(
   p_id_cotizacion IN NUMBER,
   p_ced_proveedor IN NUMBER,
@@ -309,40 +311,67 @@ BEGIN
   COMMIT;
 END;
 /
---SP10 --Obtener proveedores por tipo de cédula
 
-CREATE OR REPLACE PROCEDURE ObtenerProveedoresPorTipoCedula(tipo_cedula IN VARCHAR2(50))
-BEGIN 
-    DECLARE tipo_cedula_encontrado INT;
-    SET tipo_cedula_encontrado = (SELECT COUNT(*) FROM proveedores WHERE tipo_ced = tipo_cedula);
-    IF tipo_cedula_encontrado > 0 THEN
-        SELECT ced_proveedor AS 'Cedula Proveedor',
-               nombre_proveedor AS 'Nombre Proveedor',
-               telefono AS 'Telefono Proveedor',
-               correo AS 'Correo Proveedor'
-        FROM proveedores
-        WHERE tipo_ced = tipo_cedula;
-    ELSE
-        SELECT 'No se encontraron proveedores con este tipo de cedula' AS 'Mensaje';
-    END IF;
-END;
+--SP11 --Obtener proveedores por tipo de cedula
+SET SERVEROUTPUT ON;
 
---SP11 --Obtener proveedores por distrito
-CREATE PROCEDURE ObtenerEmpleadosPorDepartamento(IN departamento VARCHAR(50))
+CREATE OR REPLACE PROCEDURE ObtenerProveedoresPorTipoCedula(IN tipo_cedula VARCHAR2)
+IS
+    tipo_cedula_encontrado NUMBER;
 BEGIN
-    DECLARE departamento_encontrado INT;
-    SET departamento_encontrado = (SELECT COUNT(*) FROM empleados WHERE departamento = departamento);
-    IF departamento_encontrado > 0 THEN
-        SELECT cedula AS 'Cédula Empleado',
-               nombre AS 'Nombre Empleado',
-               distrito AS 'Distrito Empleado',
-               telefono AS 'Teléfono Empleado'
-        FROM empleados
-        WHERE departamento = departamento;
+    SELECT COUNT(*) INTO tipo_cedula_encontrado FROM PROVEEDORES WHERE tipo_ced = tipo_cedula;
+    
+    IF tipo_cedula_encontrado > 0 THEN
+        FOR proveedor IN (SELECT ced_proveedor AS "Cédula Proveedor",
+                                 nombre_proveedor AS "Nombre Proveedor",
+                                 telefono AS "Teléfono Proveedor",
+                                 email AS "Correo Proveedor"
+                          FROM PROVEEDORES
+                          WHERE tipo_ced = tipo_cedula)
+        LOOP
+            DBMS_OUTPUT.PUT_LINE('Cédula Proveedor: ' || proveedor."Cédula Proveedor" ||
+                                 ', Nombre Proveedor: ' || proveedor."Nombre Proveedor" ||
+                                 ', Teléfono Proveedor: ' || proveedor."Teléfono Proveedor" ||
+                                 ', Correo Proveedor: ' || proveedor."Correo Proveedor");
+        END LOOP;
     ELSE
-        SELECT 'No se encontrarían empleados en este departamento' AS 'Mensaje';
+        DBMS_OUTPUT.PUT_LINE('No se encontraron proveedores con este tipo de cédula.');
     END IF;
 END;
+/
+
+
+--Un ejemplo de la busqueda del procedimiento 
+BEGIN
+    ObtenerProveedoresPorTipoCedula('JURIDICA');
+END;
+/
+
+--SP12 --Obtener proveedores por distrito
+SET SERVEROUTPUT ON;
+
+CREATE OR REPLACE PROCEDURE ObtenerProveedoresPorDistrito(IN distrito_buscar VARCHAR2)
+IS
+BEGIN
+    DECLARE distrito_encontrado NUMBER;
+    BEGIN
+        SELECT COUNT(*) INTO distrito_encontrado FROM PROVEEDORES WHERE distrito = distrito_buscar;
+        
+        IF distrito_encontrado > 0 THEN
+            FOR proveedor IN (SELECT ced_proveedor, nombre_proveedor, telefono, email FROM PROVEEDORES WHERE distrito = distrito_buscar)
+            LOOP
+                DBMS_OUTPUT.PUT_LINE('Cédula Proveedor: ' || proveedor.ced_proveedor || ', Nombre Proveedor: ' || proveedor.nombre_proveedor || ', Teléfono Proveedor: ' || proveedor.telefono || ', Correo Proveedor: ' || proveedor.email);
+            END LOOP;
+        ELSE
+            DBMS_OUTPUT.PUT_LINE('No se encontraron proveedores en el distrito especificado.');
+        END IF;
+    EXCEPTION
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+    END;
+END;
+
+
 
 --VISTAS - Luis
 
@@ -685,7 +714,7 @@ CREATE OR REPLACE PACKAGE Proveedores_Package IS
     p_ced_proveedor NUMBER
   ) RETURN SYS_REFCURSOR;
   
-  -- Actualizar informaciÃ³n de un proveedor
+  -- Actualizar informaciÃÂ³n de un proveedor
   PROCEDURE ActualizarProveedor(
     p_ced_proveedor NUMBER,
     p_telefono VARCHAR2,
@@ -693,7 +722,7 @@ CREATE OR REPLACE PACKAGE Proveedores_Package IS
     p_direccion VARCHAR2
   );
   
-  -- Obtener proveedores con mÃ¡s cotizaciones
+  -- Obtener proveedores con mÃÂ¡s cotizaciones
   FUNCTION ObtenerProveedoresConMasCotizaciones(
     p_cantidad_proveedores NUMBER
   ) RETURN SYS_REFCURSOR;
@@ -750,7 +779,7 @@ CREATE OR REPLACE PACKAGE GestionMateriales AS
     p_descontinuado IN Materiales.descontinuado%TYPE DEFAULT 0
   );
 
-  --actualizar la descripci�n de un material existente
+  --actualizar la descripción de un material existente
   PROCEDURE ActualizarDescripcionMaterial(
     p_sku_producto IN Materiales.sku_producto%TYPE,
     p_descripcion IN Materiales.descripcion%TYPE
@@ -829,7 +858,7 @@ BEGIN
   WHERE sku_producto = v_sku_producto;
 
   IF v_stock_minimo - v_unidades_vendidas < 10 THEN
-    -- Enviar una notificaciÃ³n al encargado de inventario sobre el bajo stock
+    -- Enviar una notificaciÃÂ³n al encargado de inventario sobre el bajo stock
     INSERT INTO NotificacionesInventario (mensaje, fecha_notificacion)
     VALUES ('Bajo stock: SKU ' || v_sku_producto || ' - Unidades disponibles: ' || v_stock_minimo, SYSDATE);
   END IF;
@@ -933,7 +962,7 @@ BEGIN
     EXIT WHEN clientes_sin_compras_cursor%NOTFOUND;
     
     DBMS_OUTPUT.PUT_LINE('Cliente sin Compras:');
-    DBMS_OUTPUT.PUT_LINE('CÃ©dula: ' || cliente_sin_compras.ced_cliente);
+    DBMS_OUTPUT.PUT_LINE('CÃÂ©dula: ' || cliente_sin_compras.ced_cliente);
     DBMS_OUTPUT.PUT_LINE('Nombre: ' || cliente_sin_compras.nombre_cliente);
     
   END LOOP;
@@ -959,14 +988,14 @@ BEGIN
 
     DBMS_OUTPUT.PUT_LINE('Factura Emitida en el ultimo Mes:');
     DBMS_OUTPUT.PUT_LINE('Numero: ' || factura_ultimo_mes.num_factura);
-    DBMS_OUTPUT.PUT_LINE('CÃ©dula Cliente: ' || factura_ultimo_mes.ced_cliente);
+    DBMS_OUTPUT.PUT_LINE('CÃÂ©dula Cliente: ' || factura_ultimo_mes.ced_cliente);
     
   END LOOP;
   
   CLOSE facturas_ultimo_mes_cursor;
 END;
 /
---Cursor5 -Materiales más vendidos
+--Cursor5 -Materiales mÃ¡s vendidos
 DECLARE
   CURSOR materiales_mas_vendidos_cursor IS
     SELECT m.sku_producto, m.descripcion, SUM(f.cantidad) AS total_vendido
@@ -980,7 +1009,7 @@ BEGIN
   LOOP
     FETCH materiales_mas_vendidos_cursor INTO material_mas_vendido;
     EXIT WHEN materiales_mas_vendidos_cursor%NOTFOUND;
-    DBMS_OUTPUT.PUT_LINE('Material más vendido - SKU: ' || material_mas_vendido.sku_producto || ', Descripción: ' || material_mas_vendido.descripcion || ', Total Vendido: ' || material_mas_vendido.total_vendido);
+    DBMS_OUTPUT.PUT_LINE('Material mÃ¡s vendido - SKU: ' || material_mas_vendido.sku_producto || ', DescripciÃ³n: ' || material_mas_vendido.descripcion || ', Total Vendido: ' || material_mas_vendido.total_vendido);
   END LOOP;
 
   CLOSE materiales_mas_vendidos_cursor;
@@ -1006,8 +1035,8 @@ BEGIN
     FETCH cotizaciones_cursor INTO cotizacion;
     EXIT WHEN cotizaciones_cursor%NOTFOUND;
 
-    --Imprimir la información de la cotización
-    DBMS_OUTPUT.PUT_LINE('Cotización Vencida:');
+    --Imprimir la informaciÃ³n de la cotizaciÃ³n
+    DBMS_OUTPUT.PUT_LINE('CotizaciÃ³n Vencida:');
     DBMS_OUTPUT.PUT_LINE('ID: ' || cotizacion.id_cotizacion);
   
   END LOOP;
@@ -1019,7 +1048,7 @@ END;
 --Cursor7
 
 CREATE OR REPLACE PROCEDURE MostrarDetallesClientes AS
-  -- Declaraci�n
+  -- Declaración
   CURSOR c_clientes IS
     SELECT ced_cliente, nombre_cliente, telefono, email, fecha_registro
     FROM Clientes;
@@ -1037,12 +1066,12 @@ BEGIN
   -- Recorrer los datos
   LOOP
     FETCH c_clientes INTO v_ced_cliente, v_nombre_cliente, v_telefono, v_email, v_fecha_registro;
-    EXIT WHEN c_clientes%NOTFOUND; -- Salir del bucle cuando no hay m�s datos
+    EXIT WHEN c_clientes%NOTFOUND; -- Salir del bucle cuando no hay más datos
 
     --detalles del cliente
-    DBMS_OUTPUT.PUT_LINE('C�dula: ' || v_ced_cliente);
+    DBMS_OUTPUT.PUT_LINE('Cédula: ' || v_ced_cliente);
     DBMS_OUTPUT.PUT_LINE('Nombre: ' || v_nombre_cliente);
-    DBMS_OUTPUT.PUT_LINE('Tel�fono: ' || v_telefono);
+    DBMS_OUTPUT.PUT_LINE('Teléfono: ' || v_telefono);
     DBMS_OUTPUT.PUT_LINE('Email: ' || v_email);
     DBMS_OUTPUT.PUT_LINE('Fecha de registro: ' || v_fecha_registro);
 
@@ -1069,10 +1098,10 @@ BEGIN
     FETCH materiales_cursor INTO material;
     EXIT WHEN materiales_cursor%NOTFOUND;
     
-    -- Imprimir la información del material
+    -- Imprimir la informaciÃ³n del material
     DBMS_OUTPUT.PUT_LINE('Material Descontinuado:');
     DBMS_OUTPUT.PUT_LINE('SKU: ' || material.sku_producto);
-    DBMS_OUTPUT.PUT_LINE('Descripción: ' || material.descripcion);
+    DBMS_OUTPUT.PUT_LINE('DescripciÃ³n: ' || material.descripcion);
     
   END LOOP;
   
