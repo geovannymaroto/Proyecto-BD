@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.sql.DriverManager;
 import java.sql.Statement;
 import java.sql.ResultSet;
-import java.sql.CallableStatement;
 /**
  *
  * @author 50660
@@ -22,28 +21,26 @@ public class Conexion {
     String url="jdbc:oracle:thin:@localhost:1521:orcl";
         String user="DBAPROY";
         String pass = "dba24680";
-       //String sql = "IVATOTAL";
+        String sql = "select * from materiales";
         
         Connection conn;
         try{
         
             conn = DriverManager.getConnection(url,user,pass);
-            //Statement stmt = conn.createStatement();
-            CallableStatement consultaiva = conn.prepareCall("{call ivatotal}");
-            ResultSet rs = consultaiva.executeQuery();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
           
             
             System.out.println("conexion exitosa");
         
               while(rs.next()){
-             int consecutivo  = rs.getInt(1);
-             int num_factura  = rs.getInt(2);
-             String sku_producto  = rs.getString(3);
-          
+            String sku_producto   = rs.getString(1);
+            String descripcion    = rs.getString(2);
+            String es_combo     = rs.getString(3);
             
             
             
-                System.out.println("Codigo Ma :" + consecutivo +  " " + num_factura + " "+ sku_producto  );
+                System.out.println("Codigo Ma :" + sku_producto +  " " + descripcion + " "+ es_combo  );
             }
            
             conn.close();
