@@ -46,10 +46,10 @@
 <div id="Master.0">
 <div class="currentmasterreport">
 <TABLE CELLSPACING="0" CELLPADDING="1" WIDTH="100%" BORDER="0">
-<TR><TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">      SUMMARY:  <A HREF="#field_summary">FIELD</A> | <A HREF="#type_summary">TYPE</A> | <A HREF="#method_summary">METHOD</A></FONT></TD><TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2"></TR></TABLE><HR><P></P><HR><P></P><A NAME="method_summary"></A><TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1"><TR CLASS="TableHeadingColor"><TD COLSPAN="2"><FONT SIZE="+2"><B>Method Summary</B></FONT></TD><TR CLASS="TableRowColor"><TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;</CODE></FONT></TD><TD><CODE><B><A HREF="#RegistrarCliente">RegistrarCliente</A></B>( p_ced_cliente IN INT , p_tipo_ced IN VARCHAR2 , p_nombre_cliente IN VARCHAR2 , p_fecha_nacimiento IN DATE , p_telefono IN VARCHAR2 , p_email IN VARCHAR2 , p_direccion IN VARCHAR2 , p_distrito IN VARCHAR2 , p_canton IN VARCHAR2 , p_provincia IN VARCHAR2 ) </CODE><BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</TD></TR>
+<TR><TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">      SUMMARY:  <A HREF="#field_summary">FIELD</A> | <A HREF="#type_summary">TYPE</A> | <A HREF="#method_summary">METHOD</A></FONT></TD><TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2"></TR></TABLE><HR><P></P><HR><P></P><A NAME="method_summary"></A><TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1"><TR CLASS="TableHeadingColor"><TD COLSPAN="2"><FONT SIZE="+2"><B>Method Summary</B></FONT></TD><TR CLASS="TableRowColor"><TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;</CODE></FONT></TD><TD><CODE><B><A HREF="#RegistrarCliente">RegistrarCliente</A></B>( p_ced_cliente INT , p_nombre_cliente VARCHAR2 , p_fecha_nacimiento DATE , p_telefono VARCHAR2 , p_email VARCHAR2 , p_direccion VARCHAR2 , p_distrito VARCHAR2 , p_canton VARCHAR2 , p_provincia VARCHAR2 ) </CODE><BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;p_tipo_ced VARCHAR2,</TD></TR>
 </TABLE>
 <P></P><A NAME="method_detail"></A><TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1"><TR CLASS="TableHeadingColor"><TD COLSPAN="2"><FONT SIZE="+2"><B>Method Detail</B></FONT></TD></TABLE><A NAME="RegistrarCliente"></A>
-<H3>RegistrarCliente</H3><PRE>          <B>RegistrarCliente</B>( p_ced_cliente IN INT , p_tipo_ced IN VARCHAR2 , p_nombre_cliente IN VARCHAR2 , p_fecha_nacimiento IN DATE , p_telefono IN VARCHAR2 , p_email IN VARCHAR2 , p_direccion IN VARCHAR2 , p_distrito IN VARCHAR2 , p_canton IN VARCHAR2 , p_provincia IN VARCHAR2 ) </PRE><DL>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<DD><DL></DL></DD></DL><HR><TABLE CELLSPACING="0" CELLPADDING="1" WIDTH="100%" BORDER="0">
+<H3>RegistrarCliente</H3><PRE>          <B>RegistrarCliente</B>( p_ced_cliente INT , p_nombre_cliente VARCHAR2 , p_fecha_nacimiento DATE , p_telefono VARCHAR2 , p_email VARCHAR2 , p_direccion VARCHAR2 , p_distrito VARCHAR2 , p_canton VARCHAR2 , p_provincia VARCHAR2 ) </PRE><DL>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;p_tipo_ced VARCHAR2,<DD><DL></DL></DD></DL><HR><TABLE CELLSPACING="0" CELLPADDING="1" WIDTH="100%" BORDER="0">
 <TR><TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">      SUMMARY:  <A HREF="#field_summary">FIELD</A> | <A HREF="#type_summary">TYPE</A> | <A HREF="#method_summary">METHOD</A></FONT></TD><TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2"></TR></TABLE></div>
 </div>
 <div id="Master.1">
@@ -88,15 +88,15 @@
 </tr>
 <tr>
 <td>LAST_DDL_TIME</td>
-<td>14-JUL-23</td>
+<td>20-JUL-23</td>
 </tr>
 <tr>
 <td>TIMESTAMP</td>
-<td>2023-07-14:23:33:06</td>
+<td>2023-07-20:19:41:47</td>
 </tr>
 <tr>
 <td>STATUS</td>
-<td>INVALID</td>
+<td>VALID</td>
 </tr>
 <tr>
 <td>TEMPORARY</td>
@@ -210,21 +210,21 @@
 <div class="masterreport">
 <pre>
 PROCEDURE RegistrarCliente(
-  p_ced_cliente IN INT,
-  p_tipo_ced IN VARCHAR2,
-  p_nombre_cliente IN VARCHAR2,
-  p_fecha_nacimiento IN DATE,
-  p_telefono IN VARCHAR2,
-  p_email IN VARCHAR2,
-  p_direccion IN VARCHAR2,
-  p_distrito IN VARCHAR2,
-  p_canton IN VARCHAR2,
-  p_provincia IN VARCHAR2
+  p_ced_cliente INT,
+  --p_tipo_ced VARCHAR2,
+  p_nombre_cliente VARCHAR2,
+  p_fecha_nacimiento DATE,
+  p_telefono VARCHAR2,
+  p_email VARCHAR2,
+  p_direccion VARCHAR2,
+  p_distrito VARCHAR2,
+  p_canton VARCHAR2,
+  p_provincia VARCHAR2
 ) AS
 BEGIN
   INSERT INTO Clientes (
     ced_cliente,
-    tipo_ced,
+    --tipo_ced,
     nombre_cliente,
     fecha_nacimiento,
     telefono,
@@ -235,7 +235,7 @@ BEGIN
     provincia
   ) VALUES (
     p_ced_cliente,
-    p_tipo_ced,
+    --p_tipo_ced,
     p_nombre_cliente,
     p_fecha_nacimiento,
     p_telefono,
@@ -245,8 +245,10 @@ BEGIN
     p_canton,
     p_provincia
   );
-COMMIT;
-END;</pre>
+
+  COMMIT;
+END;
+</pre>
 </div>
 </div>
 </div>

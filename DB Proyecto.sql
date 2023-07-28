@@ -221,25 +221,24 @@ BEGIN
   WHERE sku_producto = p_sku_producto;
 END;
 
---SP7 - Registrar un cliente nuevo 
---DIO ERROR
+--SP7 - Registrar un cliente nuevo
 
 CREATE OR REPLACE PROCEDURE RegistrarCliente(
-  p_ced_cliente IN INT,
-  p_tipo_ced IN VARCHAR2,
-  p_nombre_cliente IN VARCHAR2,
-  p_fecha_nacimiento IN DATE,
-  p_telefono IN VARCHAR2,
-  p_email IN VARCHAR2,
-  p_direccion IN VARCHAR2,
-  p_distrito IN VARCHAR2,
-  p_canton IN VARCHAR2,
-  p_provincia IN VARCHAR2
+  p_ced_cliente INT,
+  --p_tipo_ced VARCHAR2,
+  p_nombre_cliente VARCHAR2,
+  p_fecha_nacimiento DATE,
+  p_telefono VARCHAR2,
+  p_email VARCHAR2,
+  p_direccion VARCHAR2,
+  p_distrito VARCHAR2,
+  p_canton VARCHAR2,
+  p_provincia VARCHAR2
 ) AS
 BEGIN
   INSERT INTO Clientes (
     ced_cliente,
-    tipo_ced,
+    --tipo_ced,
     nombre_cliente,
     fecha_nacimiento,
     telefono,
@@ -250,7 +249,7 @@ BEGIN
     provincia
   ) VALUES (
     p_ced_cliente,
-    p_tipo_ced,
+    --p_tipo_ced,
     p_nombre_cliente,
     p_fecha_nacimiento,
     p_telefono,
@@ -260,8 +259,10 @@ BEGIN
     p_canton,
     p_provincia
   );
-COMMIT;
+  
+  COMMIT;
 END;
+/
 
 --SP8 - Descontinuar un producto
 
@@ -275,9 +276,10 @@ BEGIN
   
 COMMIT;
 END;
+
 --PROCEDIMIENTOS - Dylan
 
---SP8 -Actualizar el precio de un material
+--SP9 -Actualizar el precio de un material
 CREATE OR REPLACE PROCEDURE ActualizarPrecioMaterial(
   p_sku_producto IN VARCHAR2,
   p_nuevo_precio IN NUMBER
@@ -291,7 +293,9 @@ BEGIN
   COMMIT;
 END;
 /
---SP9 -Registro cotizacion
+--SP10 -Registro cotizacion
+
+
 CREATE OR REPLACE PROCEDURE RegistrarCotizacion(
   p_id_cotizacion IN NUMBER,
   p_ced_proveedor IN NUMBER,
@@ -307,6 +311,66 @@ BEGIN
   COMMIT;
 END;
 /
+
+--SP11 --Obtener proveedores por tipo de cedula
+SET SERVEROUTPUT ON;
+
+CREATE OR REPLACE PROCEDURE ObtenerProveedoresPorTipoCedula(IN tipo_cedula VARCHAR2)
+IS
+    tipo_cedula_encontrado NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO tipo_cedula_encontrado FROM PROVEEDORES WHERE tipo_ced = tipo_cedula;
+    
+    IF tipo_cedula_encontrado > 0 THEN
+        FOR proveedor IN (SELECT ced_proveedor AS "Cédula Proveedor",
+                                 nombre_proveedor AS "Nombre Proveedor",
+                                 telefono AS "Teléfono Proveedor",
+                                 email AS "Correo Proveedor"
+                          FROM PROVEEDORES
+                          WHERE tipo_ced = tipo_cedula)
+        LOOP
+            DBMS_OUTPUT.PUT_LINE('Cédula Proveedor: ' || proveedor."Cédula Proveedor" ||
+                                 ', Nombre Proveedor: ' || proveedor."Nombre Proveedor" ||
+                                 ', Teléfono Proveedor: ' || proveedor."Teléfono Proveedor" ||
+                                 ', Correo Proveedor: ' || proveedor."Correo Proveedor");
+        END LOOP;
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('No se encontraron proveedores con este tipo de cédula.');
+    END IF;
+END;
+/
+
+
+--Un ejemplo de la busqueda del procedimiento 
+BEGIN
+    ObtenerProveedoresPorTipoCedula('JURIDICA');
+END;
+/
+
+--SP12 --Obtener proveedores por distrito
+SET SERVEROUTPUT ON;
+
+CREATE OR REPLACE PROCEDURE ObtenerProveedoresPorDistrito(IN distrito_buscar VARCHAR2)
+IS
+BEGIN
+    DECLARE distrito_encontrado NUMBER;
+    BEGIN
+        SELECT COUNT(*) INTO distrito_encontrado FROM PROVEEDORES WHERE distrito = distrito_buscar;
+        
+        IF distrito_encontrado > 0 THEN
+            FOR proveedor IN (SELECT ced_proveedor, nombre_proveedor, telefono, email FROM PROVEEDORES WHERE distrito = distrito_buscar)
+            LOOP
+                DBMS_OUTPUT.PUT_LINE('Cédula Proveedor: ' || proveedor.ced_proveedor || ', Nombre Proveedor: ' || proveedor.nombre_proveedor || ', Teléfono Proveedor: ' || proveedor.telefono || ', Correo Proveedor: ' || proveedor.email);
+            END LOOP;
+        ELSE
+            DBMS_OUTPUT.PUT_LINE('No se encontraron proveedores en el distrito especificado.');
+        END IF;
+    EXCEPTION
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+    END;
+END;
+
 
 
 --VISTAS - Luis
@@ -334,10 +398,8 @@ AS
 
 SELECT * FROM materialDescontinuado;
 
---VISTAS - Maria 
-
---Vista4 - Cotizacion de pedidos pendientes 
-
+--VISTAS - Maria
+--Vista4
 CREATE OR REPLACE VIEW CotizacionesPendientes AS
 SELECT c.id_cotizacion, c.ced_proveedor, c.sku_producto, c.fecha_cotizacion, c.fecha_vencimiento,
        c.dias_para_vencimiento, c.estado_cotizacion, c.fecha_recibido, c.estado_producto,
@@ -347,7 +409,6 @@ JOIN Proveedores p ON c.ced_proveedor = p.ced_proveedor
 JOIN Materiales m ON c.sku_producto = m.sku_producto
 WHERE c.fecha_recibido IS NULL;
 
-
 --Vista5 - Inventario insuficiente
 
 CREATE OR REPLACE VIEW InventarioInsuficiente AS
@@ -356,7 +417,8 @@ FROM Inventario I
 JOIN Materiales M ON I.sku_producto = M.sku_producto
 WHERE I.unidades_disponibles < 10; -- Umbral de unidades disponibles ajustable
 
--- VISTAS -Dylan 
+-- VISTAS -Dylan
+
 --Vista6 - ventas por cliente y mes
 CREATE OR REPLACE VIEW VentasPorClienteMes AS
 SELECT c.ced_cliente, c.nombre_cliente, EXTRACT(MONTH FROM f.fecha_venta) AS mes, SUM(f.precio_venta) AS total_ventas
@@ -372,19 +434,18 @@ JOIN FACTURACION f ON m.sku_producto = f.sku_producto
 GROUP BY m.sku_producto, m.descripcion
 ORDER BY SUM(f.unidades) DESC;
 
---Vista8 -Clientes con compras frecuentes 
+--Vista8 - Clientes con compras frecuentes 
 CREATE OR REPLACE VIEW ClientesComprasFrecuentes AS
 SELECT c.*
 FROM CLIENTES c
 WHERE EXISTS (SELECT 1 FROM FACTURACION f WHERE f.ced_cliente = c.ced_cliente GROUP BY f.ced_cliente HAVING COUNT(*) > 5);
 
 --Vista9 - Ventas del dia
---Dio error
 CREATE OR REPLACE VIEW VentasPorDiaSemana AS
 SELECT TO_CHAR(fecha_venta, 'DAY') AS dia_semana, SUM(precio_venta) AS total_ventas
 FROM FACTURACION
 GROUP BY TO_CHAR(fecha_venta, 'DAY')
-ORDER BY TO_CHAR(fecha_venta, 'D');
+ORDER BY TO_CHAR(fecha_venta, 'DAY');
 
 --Vista10 - Antiguedad de clientes 
 CREATE OR REPLACE VIEW ProveedoresMasAntiguos AS
@@ -427,35 +488,33 @@ END;
 
 --FUNCIONES - Maria 
 
---Funcion3 - Proveedor con mas cotizaciones
---DIO ERROR
+--Funcion3
 
-CREATE OR REPLACE FUNCTION ObtenerProveedorMasCotizaciones RETURN VARCHAR2 AS
-  proveedor_nombre VARCHAR2(100);
+CREATE OR REPLACE FUNCTION ObtenerEdad(
+  fecha_nacimiento IN DATE
+) RETURN NUMBER AS
+  edad NUMBER;
 BEGIN
-  SELECT nombre_proveedor INTO proveedor_nombre
-  FROM (
-    SELECT ced_proveedor, COUNT(*) AS num_cotizaciones
-    FROM Cotizaciones
-    GROUP BY ced_proveedor
-    ORDER BY COUNT(*) DESC
-  ) WHERE ROWNUM = 1;
-  
-  RETURN proveedor_nombre;
-END;
+  SELECT TRUNC(MONTHS_BETWEEN(SYSDATE, fecha_nacimiento) / 12) INTO edad FROM DUAL;
+  RETURN edad;
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    RETURN NULL;
+END ObtenerEdad;
+/
 
 --Funcion4 - Calcular total de una factura
---DIO ERROR
 
-CREATE OR REPLACE FUNCTION CalcularPrecioTotalFactura(p_num_factura IN INT) RETURN DECIMAL AS
+CREATE OR REPLACE FUNCTION CalcularPrecioTotalFactura(p_num_factura INT) RETURN DECIMAL AS
   precio_total DECIMAL(10, 2);
 BEGIN
-  SELECT SUM(precio_unidad * unidades) INTO precio_total
-  FROM FACTURACION
+  SELECT SUM(precio_venta * unidades) INTO precio_total
+  FROM Facturacion
   WHERE num_factura = p_num_factura;
   
   RETURN precio_total;
 END;
+/
 
 --Funcion5 - Fecha mas reciente para cotizar con un proveedor 
 
@@ -497,6 +556,7 @@ BEGIN
   
   RETURN promedio_precios;
 END;
+
 --Funcion8 - Edad de los clientes 
 CREATE OR REPLACE FUNCTION CalcularEdadCliente(
   p_ced_cliente IN NUMBER
@@ -632,7 +692,9 @@ CREATE OR REPLACE PACKAGE Clientes_Facturas_Package IS
   
 END Clientes_Facturas_Package;
 /
+
 --Paquete4 - Permite agregar ,actualizar o obtener detalles con respecto a proveedores 
+
 CREATE OR REPLACE PACKAGE Proveedores_Package IS
   -- Registrar un nuevo proveedor
   PROCEDURE RegistrarProveedor(
@@ -652,7 +714,7 @@ CREATE OR REPLACE PACKAGE Proveedores_Package IS
     p_ced_proveedor NUMBER
   ) RETURN SYS_REFCURSOR;
   
-  -- Actualizar información de un proveedor
+  -- Actualizar informaciÃÂ³n de un proveedor
   PROCEDURE ActualizarProveedor(
     p_ced_proveedor NUMBER,
     p_telefono VARCHAR2,
@@ -660,7 +722,7 @@ CREATE OR REPLACE PACKAGE Proveedores_Package IS
     p_direccion VARCHAR2
   );
   
-  -- Obtener proveedores con más cotizaciones
+  -- Obtener proveedores con mÃÂ¡s cotizaciones
   FUNCTION ObtenerProveedoresConMasCotizaciones(
     p_cantidad_proveedores NUMBER
   ) RETURN SYS_REFCURSOR;
@@ -673,7 +735,74 @@ CREATE OR REPLACE PACKAGE Proveedores_Package IS
 END Proveedores_Package;
 /
 
+--PAQUETES - Maria
 
+--Paquete5 - Facturacion
+
+CREATE OR REPLACE PACKAGE Facturacion_Package IS
+  -- Crear una factura
+  PROCEDURE CrearFactura(
+    p_num_factura INT,
+    p_ced_cliente INT,
+    p_sku_producto INT,
+    p_fecha_venta DATE,
+    p_precio_unidad DECIMAL,
+    p_unidades INT
+  );
+  
+  -- Calcular el monto total de una factura
+  FUNCTION CalcularMontoTotalFactura(
+    p_num_factura INT
+  ) RETURN DECIMAL;
+  
+  -- Todas las facturas de un cliente
+  FUNCTION ObtenerFacturasCliente(
+    p_ced_cliente INT
+  ) RETURN SYS_REFCURSOR;
+  
+  -- Detalles de una factura
+  FUNCTION ObtenerDetallesFactura(
+    p_num_factura INT
+  ) RETURN SYS_REFCURSOR;
+  
+END Facturacion_Package;
+/
+
+--Paquete6
+--Dio error
+CREATE OR REPLACE PACKAGE GestionMateriales AS
+  --insertar un nuevo material 
+  PROCEDURE InsertarMaterial(
+    p_sku_producto IN Materiales.sku_producto%TYPE,
+    p_descripcion IN Materiales.descripcion%TYPE,
+    p_precio_unidad IN Materiales.precio_unidad%TYPE,
+    p_descontinuado IN Materiales.descontinuado%TYPE DEFAULT 0
+  );
+
+  --actualizar la descripción de un material existente
+  PROCEDURE ActualizarDescripcionMaterial(
+    p_sku_producto IN Materiales.sku_producto%TYPE,
+    p_descripcion IN Materiales.descripcion%TYPE
+  );
+END GestionMateriales;
+/
+
+--Body DIO ERROR
+CREATE OR REPLACE PACKAGE BODY GestionMateriales AS
+  PROCEDURE InsertarMaterial(
+    p_sku_producto IN Materiales.sku_producto%TYPE,
+    p_descripcion IN Materiales.descripcion%TYPE,
+    p_precio_unidad IN Materiales.precio_unidad%TYPE,
+    p_descontinuado IN Materiales.descontinuado%TYPE DEFAULT 0
+  ) IS
+  BEGIN
+    INSERT INTO Materiales (sku_producto, descripcion, precio_unidad, descontinuado)
+    VALUES (p_sku_producto, p_descripcion, p_precio_unidad, p_descontinuado);
+
+    COMMIT;
+  END;
+END GestionMateriales;
+/
 
 --TRIGGERS - Luis
 
@@ -729,10 +858,29 @@ BEGIN
   WHERE sku_producto = v_sku_producto;
 
   IF v_stock_minimo - v_unidades_vendidas < 10 THEN
-    -- Enviar una notificación al encargado de inventario sobre el bajo stock
+    -- Enviar una notificaciÃÂ³n al encargado de inventario sobre el bajo stock
     INSERT INTO NotificacionesInventario (mensaje, fecha_notificacion)
     VALUES ('Bajo stock: SKU ' || v_sku_producto || ' - Unidades disponibles: ' || v_stock_minimo, SYSDATE);
   END IF;
+END;
+/
+
+--TRIGGER - Maria
+
+--Trigger4 - Actualiza unidades disponibles luego de una venta
+CREATE OR REPLACE TRIGGER ActualizarUnidadesDisponibles
+AFTER INSERT ON Facturacion
+FOR EACH ROW
+DECLARE
+  v_sku_producto INT;
+  v_unidades_vendidas INT;
+BEGIN
+  v_sku_producto := :NEW.sku_producto;
+  v_unidades_vendidas := :NEW.unidades;
+  
+  UPDATE Inventario
+  SET unidades_disponibles = unidades_disponibles - v_unidades_vendidas
+  WHERE sku_producto = v_sku_producto;
 END;
 /
 
@@ -813,9 +961,8 @@ BEGIN
     FETCH clientes_sin_compras_cursor INTO cliente_sin_compras;
     EXIT WHEN clientes_sin_compras_cursor%NOTFOUND;
     
-    -- Imprimir la información del cliente sin compras
     DBMS_OUTPUT.PUT_LINE('Cliente sin Compras:');
-    DBMS_OUTPUT.PUT_LINE('Cédula: ' || cliente_sin_compras.ced_cliente);
+    DBMS_OUTPUT.PUT_LINE('CÃÂ©dula: ' || cliente_sin_compras.ced_cliente);
     DBMS_OUTPUT.PUT_LINE('Nombre: ' || cliente_sin_compras.nombre_cliente);
     
   END LOOP;
@@ -824,31 +971,143 @@ BEGIN
 END;
 /
 
-
-
---Cursor4 -Facturas emitidas en el último mes
+--Cursor4 -Facturas emitidas en el ultimo mes
 DECLARE
   CURSOR facturas_ultimo_mes_cursor IS
     SELECT *
     FROM Facturacion
     WHERE fecha_venta >= ADD_MONTHS(TRUNC(SYSDATE, 'MONTH'), -1);
   
-  factura_ultimo_mes Facturación%ROWTYPE;
+  factura_ultimo_mes Facturacion%ROWTYPE;
 BEGIN
   OPEN facturas_ultimo_mes_cursor;
   
   LOOP
     FETCH facturas_ultimo_mes_cursor INTO factura_ultimo_mes;
     EXIT WHEN facturas_ultimo_mes_cursor%NOTFOUND;
-    
-    -- Imprimir la información de la factura emitida en el último mes
-    DBMS_OUTPUT.PUT_LINE('Factura Emitida en el Último Mes:');
-    DBMS_OUTPUT.PUT_LINE('Número: ' || factura_ultimo_mes.num_factura);
-    DBMS_OUTPUT.PUT_LINE('Cédula Cliente: ' || factura_ultimo_mes.ced_cliente);
+
+    DBMS_OUTPUT.PUT_LINE('Factura Emitida en el ultimo Mes:');
+    DBMS_OUTPUT.PUT_LINE('Numero: ' || factura_ultimo_mes.num_factura);
+    DBMS_OUTPUT.PUT_LINE('CÃÂ©dula Cliente: ' || factura_ultimo_mes.ced_cliente);
     
   END LOOP;
   
   CLOSE facturas_ultimo_mes_cursor;
+END;
+/
+--Cursor5 -Materiales mas vendidos
+ALTER SESSION SET NLS_NCHAR_CHARACTERSET = 'AL32UTF8';
+
+DECLARE
+  CURSOR materiales_mas_vendidos_cursor IS
+    SELECT m.sku_producto, m.descripcion, SUM(f.cantidad) AS total_vendido
+    FROM Materiales m
+    JOIN Facturacion f ON m.sku_producto = f.sku_producto
+    GROUP BY m.sku_producto, m.descripcion
+    ORDER BY total_vendido DESC;
+  material_mas_vendido materiales_mas_vendidos_cursor%ROWTYPE;
+BEGIN
+  OPEN materiales_mas_vendidos_cursor;
+  LOOP
+    FETCH materiales_mas_vendidos_cursor INTO material_mas_vendido;
+    EXIT WHEN materiales_mas_vendidos_cursor%NOTFOUND;
+    DBMS_OUTPUT.PUT_LINE('Material mas vendido - SKU: ' || material_mas_vendido.sku_producto || ', Descripcion: ' || material_mas_vendido.descripcion || ', Total Vendido: ' || material_mas_vendido.total_vendido);
+  END LOOP;
+
+  CLOSE materiales_mas_vendidos_cursor;
+END;
+/
+
+
+--CURSORES - Maria
+
+--Cursor6 - Cotizacion vencida
+
+DECLARE
+  CURSOR cotizaciones_cursor IS
+    SELECT *
+    FROM Cotizaciones
+    WHERE fecha_vencimiento < SYSDATE;
+  
+  cotizacion Cotizaciones%ROWTYPE;
+BEGIN
+  OPEN cotizaciones_cursor;
+  
+  LOOP
+    FETCH cotizaciones_cursor INTO cotizacion;
+    EXIT WHEN cotizaciones_cursor%NOTFOUND;
+
+    --Imprimir la informaciÃ³n de la cotizaciÃ³n
+    DBMS_OUTPUT.PUT_LINE('CotizaciÃ³n Vencida:');
+    DBMS_OUTPUT.PUT_LINE('ID: ' || cotizacion.id_cotizacion);
+  
+  END LOOP;
+  
+  CLOSE cotizaciones_cursor;
+END;
+/
+
+--Cursor7
+
+CREATE OR REPLACE PROCEDURE MostrarDetallesClientes AS
+  -- Declaración
+  CURSOR c_clientes IS
+    SELECT ced_cliente, nombre_cliente, telefono, email, fecha_registro
+    FROM Clientes;
+    
+  -- Variables
+  v_ced_cliente Clientes.ced_cliente%TYPE;
+  v_nombre_cliente Clientes.nombre_cliente%TYPE;
+  v_telefono Clientes.telefono%TYPE;
+  v_email Clientes.email%TYPE;
+  v_fecha_registro Clientes.fecha_registro%TYPE;
+BEGIN
+  
+  OPEN c_clientes;
+
+  -- Recorrer los datos
+  LOOP
+    FETCH c_clientes INTO v_ced_cliente, v_nombre_cliente, v_telefono, v_email, v_fecha_registro;
+    EXIT WHEN c_clientes%NOTFOUND; -- Salir del bucle cuando no hay más datos
+
+    --detalles del cliente
+    DBMS_OUTPUT.PUT_LINE('Cédula: ' || v_ced_cliente);
+    DBMS_OUTPUT.PUT_LINE('Nombre: ' || v_nombre_cliente);
+    DBMS_OUTPUT.PUT_LINE('Teléfono: ' || v_telefono);
+    DBMS_OUTPUT.PUT_LINE('Email: ' || v_email);
+    DBMS_OUTPUT.PUT_LINE('Fecha de registro: ' || v_fecha_registro);
+
+  END LOOP;
+
+  
+  CLOSE c_clientes;
+END;
+/
+
+--Cursor 8 - Material no disponible
+
+DECLARE
+  CURSOR materiales_cursor IS
+    SELECT *
+    FROM Materiales
+    WHERE descontinuado = 'S';
+  
+  material Materiales%ROWTYPE;
+BEGIN
+  OPEN materiales_cursor;
+  
+  LOOP
+    FETCH materiales_cursor INTO material;
+    EXIT WHEN materiales_cursor%NOTFOUND;
+    
+    -- Imprimir la informaciÃ³n del material
+    DBMS_OUTPUT.PUT_LINE('Material Descontinuado:');
+    DBMS_OUTPUT.PUT_LINE('SKU: ' || material.sku_producto);
+    DBMS_OUTPUT.PUT_LINE('DescripciÃ³n: ' || material.descripcion);
+    
+  END LOOP;
+  
+  CLOSE materiales_cursor;
 END;
 /
 
