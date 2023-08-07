@@ -9,7 +9,7 @@ package modelo;
  * @author 50660
  */
 public class Usuario {
- int cedula;
+ String cedula;
  String contrasena;
  
  
@@ -17,16 +17,16 @@ public class Usuario {
  
  }
 
-    public Usuario(int cedula, String contrasena) {
+    public Usuario(String cedula, String contrasena) {
         this.cedula = cedula;
         this.contrasena = contrasena;
     }
 
-    public int getCedula() {
+    public String getCedula() {
         return cedula;
     }
 
-    public void setCedula(int cedula) {
+    public void setCedula(String cedula) {
         this.cedula = cedula;
     }
 
