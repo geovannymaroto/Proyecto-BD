@@ -16,14 +16,16 @@
 --6. Boton Test = Success
 --7. Connect
         
---DROP TABLE MATERIALES_DESCON CASCADE CONSTRAINTS; --Eliminar tablas con constraints
+DROP TABLE USUARIOS CASCADE CONSTRAINTS; --Eliminar tablas con constraints
 
 CREATE TABLE USUARIOS(
-    ced NUMBER PRIMARY KEY,
-    nombre VARCHAR2(25) NOT NULL,
-    apellidos VARCHAR2(50) NOT NULL,
-    fecha_nacimiento DATE NOT NULL,
+    ced VARCHAR2(100) PRIMARY KEY,
     contrasenha VARCHAR2(100) NOT NULL);
+
+INSERT INTO USUARIOS(ced,contrasenha) VALUES('123456','contra');
+COMMIT;
+
+SELECT * FROM USUARIOS;
 
 CREATE TABLE MATERIALES(
     sku_producto VARCHAR2(30) PRIMARY KEY,
