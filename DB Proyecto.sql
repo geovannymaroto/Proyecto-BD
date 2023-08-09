@@ -1102,7 +1102,7 @@ BEGIN
     FETCH materiales_cursor INTO material;
     EXIT WHEN materiales_cursor%NOTFOUND;
     
-    -- Imprimir la informaciÃ³n del material
+    -- Imprimir la informaci�n del material
     DBMS_OUTPUT.PUT_LINE('Material Descontinuado:');
     DBMS_OUTPUT.PUT_LINE('SKU: ' || material.sku_producto);
     DBMS_OUTPUT.PUT_LINE('DescripciÃ³n: ' || material.descripcion);
@@ -1114,3 +1114,15 @@ END;
 /
 
 COMMIT;
+
+--*3 FUNCIONES (SACAR MARCADORES INDIVIDUALES: totales por mes) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
+
+--*3 CURSORES (SELECTs de VIEWS) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
+
+--*2 VISTAS PARA Inventario y Facturacion (SELECTs) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
+
+--*5 SPs (para 3 UPDATE y 2 DELETE) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
+
+--*1 TRIGGER (registra DELETEs o UPDATEs en cuaquiera de las 3 sub-vistas) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
+
+--*2 PAQUETES (1 para el 3er DELETE y el otro para una funci�n MARCADOR que muestre los SKU con menos de 10 unidades en inventario) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
