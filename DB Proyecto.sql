@@ -16,7 +16,7 @@
 --6. Boton Test = Success
 --7. Connect
         
-DROP TABLE USUARIOS CASCADE CONSTRAINTS; --Eliminar tablas con constraints
+DROP TABLE INVENTARIO CASCADE CONSTRAINTS; --Eliminar tablas con constraints
 
 CREATE TABLE USUARIOS(
     ced VARCHAR2(100) PRIMARY KEY,
@@ -35,9 +35,17 @@ CREATE TABLE MATERIALES(
     fecha_registro_producto DATE DEFAULT SYSDATE,
     descontinuado VARCHAR2(1) DEFAULT 'N'); --Valores: Y/N
 
---INSERT INTO MATERIALES(sku_producto,descripcion,precio_unidad,descontinuado) VALUES('ABC123','Comida',148.32,'Y');
+INSERT INTO MATERIALES(sku_producto,descripcion,precio_unidad) VALUES('DFT34X','Tinta negra',6780);
+INSERT INTO MATERIALES(sku_producto,descripcion,precio_unidad) VALUES('DFT35X','Tinta magenta',5480);
+INSERT INTO MATERIALES(sku_producto,descripcion,precio_unidad) VALUES('DFT36X','Tinta amarilla',5500);
+INSERT INTO MATERIALES(sku_producto,descripcion,precio_unidad) VALUES('DFT37X','Tinta cyan',5950);
+INSERT INTO MATERIALES(sku_producto,descripcion,precio_unidad) VALUES('GWN09B','Toner negro',52975);
+INSERT INTO MATERIALES(sku_producto,descripcion,precio_unidad) VALUES('GWN10B','Toner cyan',41950);
+INSERT INTO MATERIALES(sku_producto,descripcion,precio_unidad) VALUES('GWN11B','Toner magenta',41500);
+INSERT INTO MATERIALES(sku_producto,descripcion,precio_unidad) VALUES('GWN12B','Toner amarillo',41500);
+INSERT INTO MATERIALES(sku_producto,descripcion,precio_unidad) VALUES('XYF33A','Rodillo papel Kraft 100 mts',45000);
 
---SELECT * FROM MATERIALES;
+SELECT * FROM MATERIALES;
     
 CREATE TABLE PROVEEDORES(
     ced_proveedor NUMBER PRIMARY KEY,
@@ -70,8 +78,20 @@ CREATE TABLE INVENTARIO(
     fecha_ultima_modificacion DATE DEFAULT SYSDATE,
     
     CONSTRAINT sku_inventario_fk FOREIGN KEY(sku_producto)
-        REFERENCES MATERIALES(sku_producto) ON DELETE CASCADE
+        REFERENCES MATERIALES(sku_producto)
 );
+
+INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('DFT34X',5);
+INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('DFT35X',2);
+INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('DFT36X',7);
+INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('DFT37X',4);
+INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('GWN09B',12);
+INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('GWN10B',10);
+INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('GWN11B',5);
+INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('GWN12B',7);
+INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('XYF33A',4);
+
+SELECT * FROM INVENTARIO;
     
 CREATE TABLE COTIZACIONES(
     id_cotizacion NUMBER NOT NULL,
@@ -1120,6 +1140,18 @@ COMMIT;
 --*3 CURSORES (SELECTs de VIEWS) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
 
 --*2 VISTAS PARA Inventario y Facturacion (SELECTs) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
+CREATE OR REPLACE VIEW inventarioEG
+AS
+    SELECT A.SKU_PRODUCTO, B.DESCRIPCION, B.ES_COMBO, A.UNIDADES_DISPONIBLES, (A.UNIDADES_DISPONIBLES*B.PRECIO_UNIDAD) AS VALOR_TOTAL
+        FROM INVENTARIO A
+        INNER JOIN MATERIALES B ON A.SKU_PRODUCTO = B.SKU_PRODUCTO
+        WHERE B.DESCONTINUADO = 'N'
+        ORDER BY A.SKU_PRODUCTO;
+COMMIT;
+
+SELECT * FROM MATERIALES;
+SELECT * FROM INVENTARIO;
+SELECT * FROM inventarioEG;
 
 --*5 SPs (para 3 UPDATE y 2 DELETE) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
 
