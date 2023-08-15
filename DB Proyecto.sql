@@ -16,7 +16,7 @@
 --6. Boton Test = Success
 --7. Connect
         
-DROP TABLE INVENTARIO CASCADE CONSTRAINTS; --Eliminar tablas con constraints
+DROP TABLE materiales CASCADE CONSTRAINTS; --Eliminar tablas con constraints
 
 CREATE TABLE USUARIOS(
     ced VARCHAR2(100) PRIMARY KEY,
@@ -71,7 +71,8 @@ CREATE TABLE CLIENTES(
     canton VARCHAR2(20),
     provincia VARCHAR2(20),
     fecha_registro DATE DEFAULT SYSDATE);
-    
+
+--Se cargará solo a través del trigger "materiales_inventario_trg"
 CREATE TABLE INVENTARIO(
     sku_producto VARCHAR2(30) PRIMARY KEY,
     unidades_disponibles NUMBER NOT NULL,
@@ -81,20 +82,10 @@ CREATE TABLE INVENTARIO(
         REFERENCES MATERIALES(sku_producto)
 );
 
-INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('DFT34X',5);
-INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('DFT35X',2);
-INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('DFT36X',7);
-INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('DFT37X',4);
-INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('GWN09B',12);
-INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('GWN10B',10);
-INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('GWN11B',5);
-INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('GWN12B',7);
-INSERT INTO INVENTARIO(sku_producto,unidades_disponibles) VALUES('XYF33A',4);
-
 SELECT * FROM INVENTARIO;
     
 CREATE TABLE COTIZACIONES(
-    id_cotizacion NUMBER NOT NULL,
+    id_cotizacion NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     ced_proveedor NUMBER NOT NULL,
     sku_producto VARCHAR2(30) NOT NULL,
     fecha_cotizacion DATE DEFAULT SYSDATE,
@@ -104,13 +95,11 @@ CREATE TABLE COTIZACIONES(
     fecha_recibido DATE,
     estado_producto VARCHAR2(20) DEFAULT 'No recibido',
     
-    CONSTRAINT cotiza_pk PRIMARY KEY(id_cotizacion,ced_proveedor,sku_producto),
-    
     CONSTRAINT proveedor_cotiza_fk FOREIGN KEY(ced_proveedor)
-        REFERENCES PROVEEDORES(ced_proveedor) ON DELETE CASCADE,
+        REFERENCES PROVEEDORES(ced_proveedor),
     
     CONSTRAINT sku_cotiza_fk FOREIGN KEY(sku_producto)
-        REFERENCES MATERIALES(sku_producto) ON DELETE CASCADE
+        REFERENCES MATERIALES(sku_producto)
 );
 
 CREATE TABLE FACTURACION(
@@ -1156,5 +1145,21 @@ SELECT * FROM inventarioEG;
 --*5 SPs (para 3 UPDATE y 2 DELETE) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
 
 --*1 TRIGGER (registra DELETEs o UPDATEs en cuaquiera de las 3 sub-vistas) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
+
+--Después que se realiza un INSERT en tabla MATERIALES, se llevará el SKU a INVENTARIO automáticamente
+SELECT * FROM inventario;
+
+CREATE OR REPLACE TRIGGER materiales_inventario_trg
+AFTER INSERT ON materiales
+REFERENCING NEW AS NEW
+FOR EACH ROW
+
+BEGIN
+    --insertar en la tabla de inventario
+    INSERT INTO inventario(SKU_PRODUCTO,UNIDADES_DISPONIBLES)
+        VALUES(:NEW.SKU_PRODUCTO,0);
+END;
+
+COMMIT;
 
 --*2 PAQUETES (1 para el 3er DELETE y el otro para una función MARCADOR que muestre los SKU con menos de 10 unidades en inventario) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
