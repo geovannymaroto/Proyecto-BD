@@ -65,51 +65,17 @@ Click nbfs://nbhost/SystemFileSystem/Templates/Other/html.html to edit this temp
 
   <div></div>
     <div class="testbox">
-      <form action="/">
+      <form id="cotizaForm" action="CotizaServlet" method="post">
         <h2>Ingreso de cotizaciones</h2>
-        <h4>Type of Feedback<span>*</span></h4>
-        <select>
-          <option value=""></option>
-          <option value="">Enquiry</option>
-          <option value="2">Complaint</option>
-          <option value="3">Compliment</option>
-          <option value="4">Suggestion</option>
-        </select>
-        <h4>Feedback/Enquiry on<span>*</span></h4>
-        <select>
-          <option value=""></option>
-          <option value="1">Credit and Debit Cards</option>
-          <option value="2">Deposit</option>
-          <option value="3">Housing and Renovation Loan</option>
-          <option value="4">iBanking</option>
-          <option value="5">Treasures</option>
-        </select>
-        <h4>Name<span>*</span></h4>
-        <div class="title-block">
-          <select>
-            <option value="title" selected>Title</option>
-            <option value="ms">Ms</option>
-            <option value="miss">Miss</option>
-            <option value="mrs">Mrs</option>
-            <option value="mr">Mr</option>
-          </select>
-          <input class="name" type="text" name="name" placeholder="First" />
-          <input class="name" type="text" name="name" placeholder="Last" />
-        </div>
-        <h4>Email Address<span>*</span></h4>
-        <input type="text" name="name" />
-        <h4>Contact Number<span>*</span></h4>
-        <input type="text" name="name"/>
-        <h4>Name of Staff who served me</h4>
-        <input type="text" name="name"/>
-        <h4>Branch visited</h4>
-        <input type="text" name="name"/>
-        <h4>Feedback/Enquiry</h4>
-        <p class="small">Please do not indicate your account or credit card number and banking instruction in your comments. Thank you for your time and valuable feedback.</small>
-          <textarea rows="5"></textarea>
-        <div class="btn-block">
-          <button type="submit" href="/">Send Feedback</button>
-        </div>
+        <h4>ID Proveedor<span>*</span></h4>
+        <input type="text" name="idProveedor">
+        <h4>SKU<span>*</span></h4>
+        <input type="text" name="sku">
+        <h4>Fecha de cotización<span>*</span></h4>
+        <input type="date" name="fechaCotiza">
+        <h4>Fecha de vencimiento<span>*</span></h4>
+        <input type="date" name="fechaVence">
+        <input type="submit" value="Registrar cotización">
       </form>
     </div>
   

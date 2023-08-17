@@ -1144,6 +1144,14 @@ SELECT * FROM inventarioEG;
 
 --*5 SPs (para 3 UPDATE y 2 DELETE) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
 
+--1. Insertar nuevo registro en tabla Cotizaciones
+CREATE OR REPLACE PROCEDURE nuevaCotizacion(idProveedor IN VARCHAR2, producto IN VARCHAR2, fechaCotiza IN VARCHAR2, fechaVence IN VARCHAR2)
+AS
+BEGIN
+    INSERT INTO COTIZACIONES(ced_proveedor,sku_producto,fecha_cotizacion,fecha_vencimiento) VALUES(idProveedor,producto,fechaCotiza,fechaVence);
+COMMIT;
+END;
+
 --*1 TRIGGER (registra DELETEs o UPDATEs en cuaquiera de las 3 sub-vistas) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
 
 --Después que se realiza un INSERT en tabla MATERIALES, se llevará el SKU a INVENTARIO automáticamente
