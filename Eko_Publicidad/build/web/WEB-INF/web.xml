@@ -3,7 +3,7 @@
     <servlet>
         <servlet-name>Controlador</servlet-name>
         <servlet-class>controlador.Controlador</servlet-class>
-    </servlet>
+    </servlet>    
     <servlet-mapping>
         <servlet-name>Controlador</servlet-name>
         <url-pattern>/Controlador</url-pattern>

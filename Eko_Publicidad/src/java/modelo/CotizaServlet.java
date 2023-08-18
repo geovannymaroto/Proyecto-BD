@@ -22,7 +22,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author LuisK
  */
-//@WebServlet("/cotizaServlet")
+@WebServlet("/CotizaServlet")
 public class CotizaServlet extends HttpServlet{
 
     @Override
@@ -46,8 +46,9 @@ public class CotizaServlet extends HttpServlet{
         String orden = "{call DBAPROY.nuevaCotizacion(?,?,?,?)}";
         CallableStatement cstmt;
         try {
+            Class.forName("oracle.jdbc.driver.OracleDriver");
             Connection con = DriverManager.getConnection(url,user,pass);
-            
+                        
             cstmt = con.prepareCall(orden);
             cstmt.setString(1, idProveedor);
             cstmt.setString(2, sku);
@@ -57,7 +58,8 @@ public class CotizaServlet extends HttpServlet{
             cstmt.execute();
             cstmt.close();
             
-        } catch (SQLException ex) {
+        } catch (SQLException | ClassNotFoundException
+                ex) {            
             Logger.getLogger(CotizaServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
         
