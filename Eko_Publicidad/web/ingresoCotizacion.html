@@ -68,13 +68,13 @@ Click nbfs://nbhost/SystemFileSystem/Templates/Other/html.html to edit this temp
       <form id="cotizaForm" action="CotizaServlet" method="post">
         <h2>Ingreso de cotizaciones</h2>
         <h4>ID Proveedor<span>*</span></h4>
-        <input type="text" name="idProveedor">
+        <input type="number" name="idProveedor">
         <h4>SKU<span>*</span></h4>
         <input type="text" name="sku">
         <h4>Fecha de cotización<span>*</span></h4>
-        <input type="date" name="fechaCotiza">
+        <input type="text" name="fechaCotiza" placeholder="DD-MM-YY">
         <h4>Fecha de vencimiento<span>*</span></h4>
-        <input type="date" name="fechaVence">
+        <input type="text" name="fechaVence" placeholder="DD-MM-YY">
         <input type="submit" value="Registrar cotización">
       </form>
     </div>

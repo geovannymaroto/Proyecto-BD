@@ -9,6 +9,9 @@ import java.sql.Connection;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.sql.DriverManager;
+//import java.text.*;
+//import java.time.LocalDate;
+//import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
  
@@ -31,36 +34,45 @@ public class CotizaServlet extends HttpServlet{
          
 //        Connection con;
 //        Conexion cn = new Conexion();
+        //SimpleDateFormat formatofecha = new SimpleDateFormat("yy-mm-dd");
         
         // Leer campos del form de "ingresoCotizacion.html"
-        String idProveedor = request.getParameter("idProveedor");
+        int idProveedor = Integer.parseInt(request.getParameter("idProveedor"));
         String sku = request.getParameter("sku");
         String fechaCotiza = request.getParameter("fechaCotiza");
+        //String fechaCotiza1 = formatofecha.format(fechaCotiza);
         String fechaVence = request.getParameter("fechaVence");
+        //String fechaVence1 = formatofecha.format(fechaVence);
         
 //        con = cn.getConnection();
         String url = "jdbc:oracle:thin:@localhost:1521:orcl";
         String user = "DBAPROY";
         String pass = "dba24680";
         
-        String orden = "{call DBAPROY.nuevaCotizacion(?,?,?,?)}";
+        String orden = "{call DBAPROY.nuevaCotizacion(?,?,?,?)}"; //TO_DATE(?,'DD-MMM-YY'),TO_DATE(?,'DD-MMM-YY')
         CallableStatement cstmt;
         try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
             Connection con = DriverManager.getConnection(url,user,pass);
                         
             cstmt = con.prepareCall(orden);
-            cstmt.setString(1, idProveedor);
+            cstmt.setInt(1, idProveedor);
             cstmt.setString(2, sku);
+            //cstmt.setDate(3, (java.sql.Date) formatofecha.parse(fechaCotiza));
+            //cstmt.setDate(4, (java.sql.Date) formatofecha.parse(fechaVence));
             cstmt.setString(3, fechaCotiza);
             cstmt.setString(4, fechaVence);
             
             cstmt.execute();
             cstmt.close();
             
+            request.getRequestDispatcher("ingresoCotizacion.html").forward(request, response);
+            
         } catch (SQLException | ClassNotFoundException
                 ex) {            
             Logger.getLogger(CotizaServlet.class.getName()).log(Level.SEVERE, null, ex);
+        //} catch (ParseException ex) {
+            //Logger.getLogger(CotizaServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         

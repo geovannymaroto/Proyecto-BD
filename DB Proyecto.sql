@@ -61,6 +61,9 @@ CREATE TABLE PROVEEDORES(
     provincia VARCHAR2(20) NOT NULL,
     fecha_registro DATE DEFAULT SYSDATE);
 
+INSERT INTO PROVEEDORES(ced_proveedor,nombre_proveedor,telefono,email,direccion,distrito,canton,provincia) VALUES('789456','Pepe','6780','correo@mail.com','ZF Coyol','Industrial','Coyol','Alajuela');
+COMMIT;
+
 CREATE TABLE CLIENTES(
     ced_cliente NUMBER PRIMARY KEY,
     nombre_cliente VARCHAR2(50) NOT NULL,
@@ -1146,12 +1149,17 @@ SELECT * FROM inventarioEG;
 --*5 SPs (para 3 UPDATE y 2 DELETE) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
 
 --1. Insertar nuevo registro en tabla Cotizaciones
-CREATE OR REPLACE PROCEDURE nuevaCotizacion(idProveedor IN VARCHAR2, producto IN VARCHAR2, fechaCotiza IN VARCHAR2, fechaVence IN VARCHAR2)
+CREATE OR REPLACE PROCEDURE nuevaCotizacion(idProveedor IN NUMBER, producto IN VARCHAR2, fechaCotiza IN VARCHAR2, fechaVence IN VARCHAR2)
 AS
+    fechaCotiza1 DATE := TO_DATE(fechaCotiza,'DD-MM-YY');
+    fechaVence1 DATE := TO_DATE(fechaVence,'DD-MM-YY');
 BEGIN
-    INSERT INTO COTIZACIONES(ced_proveedor,sku_producto,fecha_cotizacion,fecha_vencimiento) VALUES(idProveedor,producto,fechaCotiza,fechaVence);
+    INSERT INTO COTIZACIONES(ced_proveedor,sku_producto,fecha_cotizacion,fecha_vencimiento) VALUES(idProveedor,producto,fechaCotiza1,fechaVence1);
+    --TO_DATE(fechaCotiza,'DD-MMM-YY'),TO_DATE(fechaVence,'DD-MMM-YY')
 COMMIT;
 END;
+
+SELECT * FROM COTIZACIONES;
 
 --*1 TRIGGER (registra DELETEs o UPDATEs en cuaquiera de las 3 sub-vistas) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
 
