@@ -32,6 +32,7 @@ CREATE TABLE MATERIALES(
     descripcion VARCHAR2(50) NOT NULL,
     es_combo VARCHAR2(1) DEFAULT 'N',
     precio_unidad NUMBER NOT NULL,
+    cantidad NUMBER NOT NULL,
     fecha_registro_producto DATE DEFAULT SYSDATE,
     descontinuado VARCHAR2(1) DEFAULT 'N'); --Valores: Y/N
 
@@ -72,7 +73,7 @@ CREATE TABLE CLIENTES(
     provincia VARCHAR2(20),
     fecha_registro DATE DEFAULT SYSDATE);
 
---Se cargar� solo a trav�s del trigger "materiales_inventario_trg"
+--Se cargará solo a través del trigger "materiales_inventario_trg"
 CREATE TABLE INVENTARIO(
     sku_producto VARCHAR2(30) PRIMARY KEY,
     unidades_disponibles NUMBER NOT NULL,
@@ -333,20 +334,20 @@ BEGIN
     SELECT COUNT(*) INTO tipo_cedula_encontrado FROM PROVEEDORES WHERE tipo_ced = tipo_cedula;
     
     IF tipo_cedula_encontrado > 0 THEN
-        FOR proveedor IN (SELECT ced_proveedor AS "Cédula Proveedor",
+        FOR proveedor IN (SELECT ced_proveedor AS "CÃ©dula Proveedor",
                                  nombre_proveedor AS "Nombre Proveedor",
-                                 telefono AS "Teléfono Proveedor",
+                                 telefono AS "TelÃ©fono Proveedor",
                                  email AS "Correo Proveedor"
                           FROM PROVEEDORES
                           WHERE tipo_ced = tipo_cedula)
         LOOP
-            DBMS_OUTPUT.PUT_LINE('Cédula Proveedor: ' || proveedor."Cédula Proveedor" ||
+            DBMS_OUTPUT.PUT_LINE('CÃ©dula Proveedor: ' || proveedor."CÃ©dula Proveedor" ||
                                  ', Nombre Proveedor: ' || proveedor."Nombre Proveedor" ||
-                                 ', Teléfono Proveedor: ' || proveedor."Teléfono Proveedor" ||
+                                 ', TelÃ©fono Proveedor: ' || proveedor."TelÃ©fono Proveedor" ||
                                  ', Correo Proveedor: ' || proveedor."Correo Proveedor");
         END LOOP;
     ELSE
-        DBMS_OUTPUT.PUT_LINE('No se encontraron proveedores con este tipo de cédula.');
+        DBMS_OUTPUT.PUT_LINE('No se encontraron proveedores con este tipo de cÃ©dula.');
     END IF;
 END;
 /
@@ -371,7 +372,7 @@ BEGIN
         IF distrito_encontrado > 0 THEN
             FOR proveedor IN (SELECT ced_proveedor, nombre_proveedor, telefono, email FROM PROVEEDORES WHERE distrito = distrito_buscar)
             LOOP
-                DBMS_OUTPUT.PUT_LINE('Cédula Proveedor: ' || proveedor.ced_proveedor || ', Nombre Proveedor: ' || proveedor.nombre_proveedor || ', Teléfono Proveedor: ' || proveedor.telefono || ', Correo Proveedor: ' || proveedor.email);
+                DBMS_OUTPUT.PUT_LINE('CÃ©dula Proveedor: ' || proveedor.ced_proveedor || ', Nombre Proveedor: ' || proveedor.nombre_proveedor || ', TelÃ©fono Proveedor: ' || proveedor.telefono || ', Correo Proveedor: ' || proveedor.email);
             END LOOP;
         ELSE
             DBMS_OUTPUT.PUT_LINE('No se encontraron proveedores en el distrito especificado.');
@@ -725,7 +726,7 @@ CREATE OR REPLACE PACKAGE Proveedores_Package IS
     p_ced_proveedor NUMBER
   ) RETURN SYS_REFCURSOR;
   
-  -- Actualizar informaciÃÂ³n de un proveedor
+  -- Actualizar informaciÃÂÃÂ³n de un proveedor
   PROCEDURE ActualizarProveedor(
     p_ced_proveedor NUMBER,
     p_telefono VARCHAR2,
@@ -733,7 +734,7 @@ CREATE OR REPLACE PACKAGE Proveedores_Package IS
     p_direccion VARCHAR2
   );
   
-  -- Obtener proveedores con mÃÂ¡s cotizaciones
+  -- Obtener proveedores con mÃÂÃÂ¡s cotizaciones
   FUNCTION ObtenerProveedoresConMasCotizaciones(
     p_cantidad_proveedores NUMBER
   ) RETURN SYS_REFCURSOR;
@@ -790,7 +791,7 @@ CREATE OR REPLACE PACKAGE GestionMateriales AS
     p_descontinuado IN Materiales.descontinuado%TYPE DEFAULT 0
   );
 
-  --actualizar la descripción de un material existente
+  --actualizar la descripciÃ³n de un material existente
   PROCEDURE ActualizarDescripcionMaterial(
     p_sku_producto IN Materiales.sku_producto%TYPE,
     p_descripcion IN Materiales.descripcion%TYPE
@@ -869,7 +870,7 @@ BEGIN
   WHERE sku_producto = v_sku_producto;
 
   IF v_stock_minimo - v_unidades_vendidas < 10 THEN
-    -- Enviar una notificaciÃÂ³n al encargado de inventario sobre el bajo stock
+    -- Enviar una notificaciÃÂÃÂ³n al encargado de inventario sobre el bajo stock
     INSERT INTO NotificacionesInventario (mensaje, fecha_notificacion)
     VALUES ('Bajo stock: SKU ' || v_sku_producto || ' - Unidades disponibles: ' || v_stock_minimo, SYSDATE);
   END IF;
@@ -973,7 +974,7 @@ BEGIN
     EXIT WHEN clientes_sin_compras_cursor%NOTFOUND;
     
     DBMS_OUTPUT.PUT_LINE('Cliente sin Compras:');
-    DBMS_OUTPUT.PUT_LINE('CÃÂ©dula: ' || cliente_sin_compras.ced_cliente);
+    DBMS_OUTPUT.PUT_LINE('CÃÂÃÂ©dula: ' || cliente_sin_compras.ced_cliente);
     DBMS_OUTPUT.PUT_LINE('Nombre: ' || cliente_sin_compras.nombre_cliente);
     
   END LOOP;
@@ -999,7 +1000,7 @@ BEGIN
 
     DBMS_OUTPUT.PUT_LINE('Factura Emitida en el ultimo Mes:');
     DBMS_OUTPUT.PUT_LINE('Numero: ' || factura_ultimo_mes.num_factura);
-    DBMS_OUTPUT.PUT_LINE('CÃÂ©dula Cliente: ' || factura_ultimo_mes.ced_cliente);
+    DBMS_OUTPUT.PUT_LINE('CÃÂÃÂ©dula Cliente: ' || factura_ultimo_mes.ced_cliente);
     
   END LOOP;
   
@@ -1048,8 +1049,8 @@ BEGIN
     FETCH cotizaciones_cursor INTO cotizacion;
     EXIT WHEN cotizaciones_cursor%NOTFOUND;
 
-    --Imprimir la informaciÃ³n de la cotizaciÃ³n
-    DBMS_OUTPUT.PUT_LINE('CotizaciÃ³n Vencida:');
+    --Imprimir la informaciÃÂ³n de la cotizaciÃÂ³n
+    DBMS_OUTPUT.PUT_LINE('CotizaciÃÂ³n Vencida:');
     DBMS_OUTPUT.PUT_LINE('ID: ' || cotizacion.id_cotizacion);
   
   END LOOP;
@@ -1061,7 +1062,7 @@ END;
 --Cursor7
 
 CREATE OR REPLACE PROCEDURE MostrarDetallesClientes AS
-  -- Declaración
+  -- DeclaraciÃ³n
   CURSOR c_clientes IS
     SELECT ced_cliente, nombre_cliente, telefono, email, fecha_registro
     FROM Clientes;
@@ -1079,12 +1080,12 @@ BEGIN
   -- Recorrer los datos
   LOOP
     FETCH c_clientes INTO v_ced_cliente, v_nombre_cliente, v_telefono, v_email, v_fecha_registro;
-    EXIT WHEN c_clientes%NOTFOUND; -- Salir del bucle cuando no hay más datos
+    EXIT WHEN c_clientes%NOTFOUND; -- Salir del bucle cuando no hay mÃ¡s datos
 
     --detalles del cliente
-    DBMS_OUTPUT.PUT_LINE('Cédula: ' || v_ced_cliente);
+    DBMS_OUTPUT.PUT_LINE('CÃ©dula: ' || v_ced_cliente);
     DBMS_OUTPUT.PUT_LINE('Nombre: ' || v_nombre_cliente);
-    DBMS_OUTPUT.PUT_LINE('Teléfono: ' || v_telefono);
+    DBMS_OUTPUT.PUT_LINE('TelÃ©fono: ' || v_telefono);
     DBMS_OUTPUT.PUT_LINE('Email: ' || v_email);
     DBMS_OUTPUT.PUT_LINE('Fecha de registro: ' || v_fecha_registro);
 
@@ -1111,10 +1112,10 @@ BEGIN
     FETCH materiales_cursor INTO material;
     EXIT WHEN materiales_cursor%NOTFOUND;
     
-    -- Imprimir la informaci�n del material
+    -- Imprimir la información del material
     DBMS_OUTPUT.PUT_LINE('Material Descontinuado:');
     DBMS_OUTPUT.PUT_LINE('SKU: ' || material.sku_producto);
-    DBMS_OUTPUT.PUT_LINE('DescripciÃ³n: ' || material.descripcion);
+    DBMS_OUTPUT.PUT_LINE('DescripciÃÂ³n: ' || material.descripcion);
     
   END LOOP;
   
@@ -1154,7 +1155,7 @@ END;
 
 --*1 TRIGGER (registra DELETEs o UPDATEs en cuaquiera de las 3 sub-vistas) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
 
---Despu�s que se realiza un INSERT en tabla MATERIALES, se llevar� el SKU a INVENTARIO autom�ticamente
+--Después que se realiza un INSERT en tabla MATERIALES, se llevará el SKU a INVENTARIO automáticamente
 SELECT * FROM inventario;
 
 CREATE OR REPLACE TRIGGER materiales_inventario_trg
@@ -1170,4 +1171,4 @@ END;
 
 COMMIT;
 
---*2 PAQUETES (1 para el 3er DELETE y el otro para una funci�n MARCADOR que muestre los SKU con menos de 10 unidades en inventario) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
+--*2 PAQUETES (1 para el 3er DELETE y el otro para una función MARCADOR que muestre los SKU con menos de 10 unidades en inventario) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
