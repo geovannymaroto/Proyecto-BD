@@ -1130,9 +1130,9 @@ COMMIT;
 
 --*3 FUNCIONES (SACAR MARCADORES INDIVIDUALES: totales por mes) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
 
---*3 CURSORES (SELECTs de VIEWS) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
+--*3 CURSORES (SELECTs de VIEWS) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)* COUNT: 1
 
---*2 VISTAS PARA Inventario y Facturacion (SELECTs) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
+--*2 VISTAS PARA Inventario y Facturacion (SELECTs) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)* COUNT: 1
 CREATE OR REPLACE VIEW inventarioEG
 AS
     SELECT A.SKU_PRODUCTO, B.DESCRIPCION, B.ES_COMBO, A.UNIDADES_DISPONIBLES, (A.UNIDADES_DISPONIBLES*B.PRECIO_UNIDAD) AS VALOR_TOTAL
@@ -1146,7 +1146,7 @@ SELECT * FROM MATERIALES;
 SELECT * FROM INVENTARIO;
 SELECT * FROM inventarioEG;
 
---*5 SPs (para 3 UPDATE y 2 DELETE) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
+--*5 SPs (para 3 UPDATE y 2 DELETE) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)* COUNT: 2
 
 --1. Insertar nuevo registro en tabla Cotizaciones
 CREATE OR REPLACE PROCEDURE nuevaCotizacion(idProveedor IN NUMBER, producto IN VARCHAR2, fechaCotiza IN VARCHAR2, fechaVence IN VARCHAR2)
@@ -1161,9 +1161,9 @@ END;
 
 SELECT * FROM COTIZACIONES;
 
---*1 TRIGGER (registra DELETEs o UPDATEs en cuaquiera de las 3 sub-vistas) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
+--*1 TRIGGER (registra DELETEs o UPDATEs en cuaquiera de las 3 sub-vistas) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)* COMPLETO
 
---Después que se realiza un INSERT en tabla MATERIALES, se llevará el SKU a INVENTARIO automáticamente
+--Despues que se realiza un INSERT en tabla MATERIALES, se llevara el SKU a INVENTARIO automaticamente
 SELECT * FROM inventario;
 
 CREATE OR REPLACE TRIGGER materiales_inventario_trg
@@ -1179,4 +1179,36 @@ END;
 
 COMMIT;
 
---*2 PAQUETES (1 para el 3er DELETE y el otro para una función MARCADOR que muestre los SKU con menos de 10 unidades en inventario) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
+--*2 PAQUETES (1 para el 3er DELETE y el otro para una funcion MARCADOR que muestre los SKU con menos de 10 unidades en inventario) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)* COUNT: 1
+--1. Muestra el inventario disponible en tabla html
+CREATE OR REPLACE PACKAGE mostrarInventario
+AS
+PROCEDURE mostrarInventarioVista(
+skuProducto OUT INVENTARIO.SKU_PRODUCTO%TYPE,
+descr OUT MATERIALES.DESCRIPCION%TYPE,
+combo OUT MATERIALES.ES_COMBO%TYPE,
+unidades OUT INVENTARIO.UNIDADES_DISPONIBLES%TYPE,
+total OUT NUMBER
+); 
+END mostrarInventario;
+
+CREATE OR REPLACE PACKAGE BODY mostrarInventario 
+AS
+PROCEDURE mostrarInventarioVista(
+skuProducto OUT INVENTARIO.SKU_PRODUCTO%TYPE,
+descr OUT MATERIALES.DESCRIPCION%TYPE,
+combo OUT MATERIALES.ES_COMBO%TYPE,
+unidades OUT INVENTARIO.UNIDADES_DISPONIBLES%TYPE,
+total OUT NUMBER
+)
+IS
+    recorreInventario SYS_REFCURSOR;
+BEGIN 
+    OPEN recorreInventario FOR SELECT SKU_PRODUCTO, DESCRIPCION, ES_COMBO, UNIDADES_DISPONIBLES, VALOR_TOTAL
+        FROM inventarioEG;
+    
+    FETCH recorreInventario INTO skuProducto, descr, combo, unidades, total;
+    
+    CLOSE recorreInventario;
+END mostrarInventarioVista;
+END mostrarInventario;
