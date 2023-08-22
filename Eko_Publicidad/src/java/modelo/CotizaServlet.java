@@ -9,9 +9,6 @@ import java.sql.Connection;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.sql.DriverManager;
-//import java.text.*;
-//import java.time.LocalDate;
-//import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
  

@@ -14,6 +14,8 @@
     integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
   <title>Eko-Publicidad CR</title>
 
+</head>
+
   <style>
     table {
     font-family: arial, sans-serif;
@@ -31,8 +33,7 @@
     background-color: #dddddd;
     }
   </style>
-</head>
-
+  
 <body>
   <!---INICIO Barra Navegacion-->
   <div>
@@ -75,13 +76,20 @@
       </a>
     </div>
 
-    <div id="hero">
-    </div>
   </div>
   <!---FIN Barra Navegacion-->
-
+  
+  <br><br>
+  
+<center>
+    <div>
+        <h3>Inventario actual</h3>
+        <form action="Controlador1" method="POST">
+            <input type="submit" name="accion" value="Mostrar">
+        </form>
+    </div>
   <div>
-      <table class="tablaEG">
+      <table class="tablaEG" border="1">
           <thead class="theadEG">
               <tr>
                   <th scope="col">SKU Producto</th>
@@ -89,24 +97,32 @@
                   <th scope="col">En combo</th>
                   <th scope="col">Unidades en inventario</th>
                   <th scope="col">Valor total unidades</th>
-                  <th scope="col">Editar</th>
-                  <th scope="col">Eliminar</th>
+                  <th scope="col">Acciones</th>
               </tr>
           </thead>
           <tbody>
+            <c:forEach var="dato" items="${datos}">
               <tr>
-                  <td onClick="generarVistaInv()"></td>
+                  <td>${dato.getSku()}</td>
+                  <td>${dato.getDescripcion()}</td>
+                  <td>${dato.getEs_combo()}</td>
+                  <td>${dato.getUnidades_disponibles()}</td>
+                  <td>${dato.getValor_total()}</td>
                   <td>
-                      <a href="#">Editar</a>
-                  </td>
-                  <td>
-                      <a href="#">Eliminar</a>
+                      <form>
+                          <input type="submit" value="Editar">
+                          <input type="submit" value="Eliminar">
+                      </form>
                   </td>
               </tr>
-          </tbody>
+            </c:forEach>
+           </tbody>
       </table>
   </div>
+</center>
 </body>
+
+<br><br>
 
 <footer class="bg-dark text-center text-white">
   <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.2);">

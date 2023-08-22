@@ -1185,7 +1185,7 @@ CREATE OR REPLACE PACKAGE mostrarInventario
 AS
 PROCEDURE mostrarInventarioVista(
 skuProducto OUT INVENTARIO.SKU_PRODUCTO%TYPE,
-descr OUT MATERIALES.DESCRIPCION%TYPE,
+descripcion OUT MATERIALES.DESCRIPCION%TYPE,
 combo OUT MATERIALES.ES_COMBO%TYPE,
 unidades OUT INVENTARIO.UNIDADES_DISPONIBLES%TYPE,
 total OUT NUMBER
@@ -1196,7 +1196,7 @@ CREATE OR REPLACE PACKAGE BODY mostrarInventario
 AS
 PROCEDURE mostrarInventarioVista(
 skuProducto OUT INVENTARIO.SKU_PRODUCTO%TYPE,
-descr OUT MATERIALES.DESCRIPCION%TYPE,
+descripcion OUT MATERIALES.DESCRIPCION%TYPE,
 combo OUT MATERIALES.ES_COMBO%TYPE,
 unidades OUT INVENTARIO.UNIDADES_DISPONIBLES%TYPE,
 total OUT NUMBER
@@ -1207,8 +1207,25 @@ BEGIN
     OPEN recorreInventario FOR SELECT SKU_PRODUCTO, DESCRIPCION, ES_COMBO, UNIDADES_DISPONIBLES, VALOR_TOTAL
         FROM inventarioEG;
     
-    FETCH recorreInventario INTO skuProducto, descr, combo, unidades, total;
+    FETCH recorreInventario INTO skuProducto, descripcion, combo, unidades, total;
     
     CLOSE recorreInventario;
 END mostrarInventarioVista;
 END mostrarInventario;
+
+SELECT mostrarInventario.mostrarInventarioVista(1,2,3,4,5) FROM DUAL;
+
+COMMIT;
+
+set serveroutput on;
+
+DECLARE
+sku VARCHAR2(50);
+descripcion VARCHAR2(50);
+combo VARCHAR2(2);
+units NUMBER;
+total NUMBER;
+BEGIN
+mostrarInventario.mostrarInventarioVista(sku,descripcion,combo,units,total);
+dbms_output.put_line(sku || descripcion || combo|| units || total);
+END;
