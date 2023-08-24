@@ -122,6 +122,11 @@ public class estadoGeneralCot extends javax.swing.JFrame {
         jLabel15.setText("Ir a...");
 
         btnIrInventario.setText("Inventario");
+        btnIrInventario.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnIrInventarioActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -243,6 +248,10 @@ public class estadoGeneralCot extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnIrInventarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIrInventarioActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnIrInventarioActionPerformed
 
     /**
      * @param args the command line arguments
