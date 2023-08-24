@@ -122,7 +122,7 @@ public class login extends javax.swing.JFrame {
         try{
         
              con = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:orcl","DBAPROY","dba24680"); 
-             String sql = "select * from USUARIOS where =? and password=? ";
+             String sql = "{? = call SP_BuscarUusuario (?) }";
              pst = con.prepareStatement(sql);
              pst.setString(1,txtusuario.getText());
              pst.setString(1,txtcontra.getText());
