@@ -61,8 +61,11 @@ CREATE TABLE PROVEEDORES(
     provincia VARCHAR2(20) NOT NULL,
     fecha_registro DATE DEFAULT SYSDATE);
 
-INSERT INTO PROVEEDORES(ced_proveedor,nombre_proveedor,telefono,email,direccion,distrito,canton,provincia) VALUES('789456','Pepe','6780','correo@mail.com','ZF Coyol','Industrial','Coyol','Alajuela');
+INSERT INTO PROVEEDORES(ced_proveedor,nombre_proveedor,telefono,email,direccion,distrito,canton,provincia) VALUES('123','Pepe Carrillo','6780','correo@mail.com','ZF Coyol','Industrial','Coyol','Alajuela');
+INSERT INTO PROVEEDORES(ced_proveedor,nombre_proveedor,telefono,email,direccion,distrito,canton,provincia) VALUES('456','Ronny Blanco','9874','otro@correo.com','ZF Lima','Industrial','Lima','Cartago');
 COMMIT;
+
+SELECT * FROM PROVEEDORES;
 
 CREATE TABLE CLIENTES(
     ced_cliente NUMBER PRIMARY KEY,
@@ -1128,11 +1131,11 @@ END;
 
 COMMIT;
 
---*3 FUNCIONES (SACAR MARCADORES INDIVIDUALES: totales por mes) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
+--*************************************************************
+--*************************************************************
 
---*3 CURSORES (SELECTs de VIEWS) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)* COUNT: 1
-
---*2 VISTAS PARA Inventario y Facturacion (SELECTs) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)* COUNT: 1
+--*2 VISTAS PARA Inventario y Facturacion (SELECTs) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
+--VISTA 1 - INVENTARIO
 CREATE OR REPLACE VIEW inventarioEG
 AS
     SELECT A.SKU_PRODUCTO, B.DESCRIPCION, B.ES_COMBO, A.UNIDADES_DISPONIBLES, (A.UNIDADES_DISPONIBLES*B.PRECIO_UNIDAD) AS VALOR_TOTAL
@@ -1146,20 +1149,25 @@ SELECT * FROM MATERIALES;
 SELECT * FROM INVENTARIO;
 SELECT * FROM inventarioEG;
 
---*5 SPs (para 3 UPDATE y 2 DELETE) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)* COUNT: 2
+--*************************************************************
 
---1. Insertar nuevo registro en tabla Cotizaciones
-CREATE OR REPLACE PROCEDURE nuevaCotizacion(idProveedor IN NUMBER, producto IN VARCHAR2, fechaCotiza IN VARCHAR2, fechaVence IN VARCHAR2)
+--VISTA 2 - COTIZACIONES
+CREATE OR REPLACE VIEW cotizaEG
 AS
-    fechaCotiza1 DATE := TO_DATE(fechaCotiza,'DD-MM-YY');
-    fechaVence1 DATE := TO_DATE(fechaVence,'DD-MM-YY');
-BEGIN
-    INSERT INTO COTIZACIONES(ced_proveedor,sku_producto,fecha_cotizacion,fecha_vencimiento) VALUES(idProveedor,producto,fechaCotiza1,fechaVence1);
-    --TO_DATE(fechaCotiza,'DD-MMM-YY'),TO_DATE(fechaVence,'DD-MMM-YY')
-COMMIT;
-END;
+    SELECT A.id_cotizacion, A.ced_proveedor, B.nombre_proveedor, A.sku_producto, C.descripcion,
+        A.fecha_cotizacion, A.fecha_vencimiento, A.dias_para_vencimiento
+        FROM cotizaciones A
+        INNER JOIN proveedores B ON A.ced_proveedor = B.ced_proveedor
+        INNER JOIN materiales C ON A.sku_producto = C.sku_producto
+        WHERE A.estado_cotizacion = 'Pendiente' AND A.estado_producto = 'No recibido'
+        ORDER BY A.id_cotizacion;
 
-SELECT * FROM COTIZACIONES;
+COMMIT;
+
+SELECT * FROM cotizaEG;
+
+--*************************************************************
+--*************************************************************
 
 --*1 TRIGGER (registra DELETEs o UPDATEs en cuaquiera de las 3 sub-vistas) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)* COMPLETO
 
@@ -1179,53 +1187,102 @@ END;
 
 COMMIT;
 
+--*************************************************************
+--*************************************************************
+
 --*2 PAQUETES (1 para el 3er DELETE y el otro para una funcion MARCADOR que muestre los SKU con menos de 10 unidades en inventario) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)* COUNT: 1
---1. Muestra el inventario disponible en tabla html
+--1. PAQUETE 1 - Para el inventario
 CREATE OR REPLACE PACKAGE mostrarInventario
 AS
+--Trae info a tabla
 PROCEDURE mostrarInventarioVista(
-skuProducto OUT INVENTARIO.SKU_PRODUCTO%TYPE,
-descripcion OUT MATERIALES.DESCRIPCION%TYPE,
-combo OUT MATERIALES.ES_COMBO%TYPE,
-unidades OUT INVENTARIO.UNIDADES_DISPONIBLES%TYPE,
-total OUT NUMBER
-); 
+    recorreInventario OUT SYS_REFCURSOR
+);
+
+--Trae info de unidades
+FUNCTION obtenerInvFiltrado(
+    sku IN VARCHAR2)
+RETURN NUMBER;
+
+--Actualiza
+PROCEDURE actualizaInventario(
+    sku IN VARCHAR2,
+    unidades IN NUMBER
+);
+
+--Eliminar
+PROCEDURE eliminaInventario(
+    sku IN VARCHAR2
+);
 END mostrarInventario;
 
 CREATE OR REPLACE PACKAGE BODY mostrarInventario 
 AS
 PROCEDURE mostrarInventarioVista(
-skuProducto OUT INVENTARIO.SKU_PRODUCTO%TYPE,
-descripcion OUT MATERIALES.DESCRIPCION%TYPE,
-combo OUT MATERIALES.ES_COMBO%TYPE,
-unidades OUT INVENTARIO.UNIDADES_DISPONIBLES%TYPE,
-total OUT NUMBER
+recorreInventario OUT SYS_REFCURSOR
 )
 IS
-    recorreInventario SYS_REFCURSOR;
 BEGIN 
     OPEN recorreInventario FOR SELECT SKU_PRODUCTO, DESCRIPCION, ES_COMBO, UNIDADES_DISPONIBLES, VALOR_TOTAL
         FROM inventarioEG;
-    
-    FETCH recorreInventario INTO skuProducto, descripcion, combo, unidades, total;
-    
-    CLOSE recorreInventario;
 END mostrarInventarioVista;
-END mostrarInventario;
 
-SELECT mostrarInventario.mostrarInventarioVista(1,2,3,4,5) FROM DUAL;
+FUNCTION obtenerInvFiltrado(
+    sku IN VARCHAR2)
+RETURN NUMBER
+IS
+unidades NUMBER;
+BEGIN 
+    SELECT UNIDADES_DISPONIBLES INTO unidades
+        FROM inventarioEG WHERE SKU_PRODUCTO = sku;
+    RETURN unidades;
+END obtenerInvFiltrado;
+
+PROCEDURE actualizaInventario(
+    sku IN VARCHAR2,
+    unidades IN NUMBER
+)
+IS
+BEGIN
+    UPDATE inventario SET unidades_disponibles=unidades WHERE sku_producto=sku;
+END actualizaInventario;
+
+PROCEDURE eliminaInventario(
+    sku IN VARCHAR2
+)
+IS
+BEGIN
+    DELETE FROM inventario WHERE sku_producto=sku;
+END eliminaInventario;
+END mostrarInventario;
 
 COMMIT;
 
-set serveroutput on;
+--*******************************************************
 
-DECLARE
-sku VARCHAR2(50);
-descripcion VARCHAR2(50);
-combo VARCHAR2(2);
-units NUMBER;
-total NUMBER;
+--2. PAQUETE 2 - Para cotizaciones
+CREATE OR REPLACE PACKAGE mostrarCotizacion
+AS
+--Cargar datos en tabla
+
+--Insertar nuevas cotizaciones
+PROCEDURE nuevaCotizacion(idProveedor IN NUMBER, producto IN VARCHAR2, fechaCotiza IN VARCHAR2, fechaVence IN VARCHAR2);
+END mostrarCotizacion;
+
+CREATE OR REPLACE PACKAGE BODY mostrarCotizacion 
+AS
+--Tabla
+PROCEDURE nuevaCotizacion(
+idProveedor IN NUMBER, 
+producto IN VARCHAR2, 
+fechaCotiza IN VARCHAR2, 
+fechaVence IN VARCHAR2
+)
+IS
+    fechaCotiza1 DATE := TO_DATE(fechaCotiza,'DD-MM-YY');
+    fechaVence1 DATE := TO_DATE(fechaVence,'DD-MM-YY');
 BEGIN
-mostrarInventario.mostrarInventarioVista(sku,descripcion,combo,units,total);
-dbms_output.put_line(sku || descripcion || combo|| units || total);
-END;
+    INSERT INTO COTIZACIONES(ced_proveedor,sku_producto,fecha_cotizacion,fecha_vencimiento) VALUES(idProveedor,producto,fechaCotiza1,fechaVence1);
+    COMMIT;
+END nuevaCotizacion;
+END mostrarCotizacion;
