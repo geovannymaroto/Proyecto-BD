@@ -1264,14 +1264,45 @@ COMMIT;
 CREATE OR REPLACE PACKAGE mostrarCotizacion
 AS
 --Cargar datos en tabla
+PROCEDURE mostrarCotizacionVista(
+    recorreCotizacion OUT SYS_REFCURSOR
+);
+
+--Trae info de cedula
+FUNCTION obtenerCotCed(
+    idCot IN NUMBER)
+RETURN NUMBER;
 
 --Insertar nuevas cotizaciones
 PROCEDURE nuevaCotizacion(idProveedor IN NUMBER, producto IN VARCHAR2, fechaCotiza IN VARCHAR2, fechaVence IN VARCHAR2);
+
+--Actualiza
+PROCEDURE actualizaCotiza(
+    idCot IN NUMBER,
+    idProveedor IN NUMBER, 
+    producto IN VARCHAR2, 
+    fechaCotiza IN VARCHAR2, 
+    fechaVence IN VARCHAR2
+);
+
+PROCEDURE eliminaCotiza(
+    idCot IN NUMBER
+);
 END mostrarCotizacion;
 
 CREATE OR REPLACE PACKAGE BODY mostrarCotizacion 
 AS
 --Tabla
+PROCEDURE mostrarCotizacionVista(
+recorreCotizacion OUT SYS_REFCURSOR
+)
+IS
+BEGIN 
+        OPEN recorreCotizacion FOR SELECT ID_COTIZACION, CED_PROVEEDOR, NOMBRE_PROVEEDOR, SKU_PRODUCTO, DESCRIPCION,
+        FECHA_COTIZACION, FECHA_VENCIMIENTO, DIAS_PARA_VENCIMIENTO
+        FROM cotizaEG;
+END mostrarCotizacionVista;
+
 PROCEDURE nuevaCotizacion(
 idProveedor IN NUMBER, 
 producto IN VARCHAR2, 
@@ -1285,4 +1316,41 @@ BEGIN
     INSERT INTO COTIZACIONES(ced_proveedor,sku_producto,fecha_cotizacion,fecha_vencimiento) VALUES(idProveedor,producto,fechaCotiza1,fechaVence1);
     COMMIT;
 END nuevaCotizacion;
+
+--Trae info de cedula
+FUNCTION obtenerCotCed(
+    idCot IN NUMBER)
+RETURN NUMBER
+IS
+cedPro NUMBER;
+BEGIN 
+    SELECT CED_PROVEEDOR INTO cedPro
+        FROM cotizaEG WHERE ID_COTIZACION = idCot;
+    RETURN cedPro;
+END obtenerCotCed;
+
+PROCEDURE actualizaCotiza(
+    idCot IN NUMBER,
+    idProveedor IN NUMBER, 
+    producto IN VARCHAR2, 
+    fechaCotiza IN VARCHAR2, 
+    fechaVence IN VARCHAR2
+)
+IS
+    fechaCotiza1 DATE := TO_DATE(fechaCotiza,'DD-MM-YY');
+    fechaVence1 DATE := TO_DATE(fechaVence,'DD-MM-YY');
+BEGIN
+    UPDATE cotizaciones SET ced_proveedor=idProveedor, sku_producto=producto, fecha_cotizacion=fechaCotiza1, fecha_vencimiento=fechaVence1 WHERE id_cotizacion=idCot;
+END actualizaCotiza;
+
+PROCEDURE eliminaCotiza(
+    idCot IN NUMBER
+)
+IS
+BEGIN
+    DELETE FROM cotizaciones WHERE id_cotizacion=idCot;
+END eliminaCotiza;
+
 END mostrarCotizacion;
+
+COMMIT;

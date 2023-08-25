@@ -4,6 +4,15 @@
  */
 package eko_public;
 
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import oracle.jdbc.OracleTypes;
+
 /**
  *
  * @author LuisK
@@ -15,6 +24,7 @@ public class estadoGeneralCot extends javax.swing.JFrame {
      */
     public estadoGeneralCot() {
         initComponents();
+        cargarTabla();
     }
 
     /**
@@ -83,6 +93,11 @@ public class estadoGeneralCot extends javax.swing.JFrame {
                 return types [columnIndex];
             }
         });
+        jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTable1MouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(jTable1);
 
         jLabel3.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
@@ -113,10 +128,25 @@ public class estadoGeneralCot extends javax.swing.JFrame {
         jLabel14.setText("ID de cotización");
 
         btnAgregar.setText("Agregar");
+        btnAgregar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAgregarActionPerformed(evt);
+            }
+        });
 
         btnEditar.setText("Editar");
+        btnEditar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEditarActionPerformed(evt);
+            }
+        });
 
         btnEliminar.setText("Eliminar");
+        btnEliminar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEliminarActionPerformed(evt);
+            }
+        });
 
         jLabel15.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel15.setText("Ir a...");
@@ -250,12 +280,166 @@ public class estadoGeneralCot extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnIrInventarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIrInventarioActionPerformed
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+        this.setVisible(false);
+        estadoGeneralInv e = new estadoGeneralInv();
+        e.setVisible(true);
+    }//GEN-LAST:event_btnIrInventarioActionPerformed
+
+    private void btnAgregarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarActionPerformed
+        int cedPro = Integer.parseInt(txtCedProAgrega.getText());
+        String sku = txtSkuAgrega.getText();
+        String fechaC = txtFecCotAgrega.getText();
+        String fechaV = txtFecVenAgrega.getText();
+        Connection con;
+        String sql = "{call mostrarCotizacion.nuevaCotizacion(?,?,?,?)}";
+        CallableStatement cstmt;
+        
+        try {
+            con=Conexion.getConexion();
+            cstmt = con.prepareCall(sql);
+            cstmt.setInt(1, cedPro);
+            cstmt.setString(2, sku);
+            cstmt.setString(3, fechaC);
+            cstmt.setString(4, fechaV);
+            cstmt.execute();
+            
+            JOptionPane.showMessageDialog(null, "Se agregó correctamente la ctización");
+            limpiar();
+            cargarTabla();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.toString());
+        }
+    }//GEN-LAST:event_btnAgregarActionPerformed
+
+    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
+        Connection con;
+        String sqlCed = "{? = call mostrarCotizacion.obtenerCotCed(?)}";
+        CallableStatement cstmt;
+        
+        try {
+            int fila = jTable1.getSelectedRow();
+            int idCot = Integer.parseInt(jTable1.getValueAt(fila, 0).toString());
+            con=Conexion.getConexion();
+            cstmt = con.prepareCall(sqlCed);          
+            cstmt.registerOutParameter(1, OracleTypes.NUMBER);
+            cstmt.setInt(2, idCot);
+            cstmt.execute();
+
+//            while (resultSet.next()) {
+                txtIdCotEliminar.setText(Integer.toString(idCot));
+                txtCedProEdita.setText(String.valueOf(cstmt.getInt(1)));
+//            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.toString());
+        }
+    }//GEN-LAST:event_jTable1MouseClicked
+
+    private void btnEditarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditarActionPerformed
+        int cedPro = Integer.parseInt(txtCedProEdita.getText());
+        String sku = txtSkuEdita.getText();
+        String fechaC = txtFecCotEdita.getText();
+        String fechaV = txtFecVenEdita.getText();
+        Connection con;
+        String sql = "{call mostrarCotizacion.actualizaCotiza(?,?,?,?)}";
+        CallableStatement cstmt;
+        
+        try {
+            con=Conexion.getConexion();
+            cstmt = con.prepareCall(sql);
+            cstmt.setInt(1, cedPro);
+            cstmt.setString(2, sku);
+            cstmt.setString(3, fechaC);
+            cstmt.setString(4, fechaV);
+            cstmt.execute();
+            
+            JOptionPane.showMessageDialog(null, "Se actualizó correctamente la cotización seleccionada");
+            limpiar();
+            cargarTabla();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.toString());
+        }
+    }//GEN-LAST:event_btnEditarActionPerformed
+
+    private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarActionPerformed
+
+        int idCot = Integer.parseInt(txtIdCotEliminar.getText());
+        Connection con;
+        String sql = "{call mostrarCotizacion.eliminaCotiza(?)}";
+        CallableStatement cstmt;
+        
+        try {
+            con=Conexion.getConexion();
+            cstmt = con.prepareCall(sql);
+            cstmt.setInt(1, idCot);
+            cstmt.execute();
+            
+            JOptionPane.showMessageDialog(null, "Se eliminó correctamente la cotización seleccionada");
+            limpiar();
+            cargarTabla();
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.toString());
+        }
+    }//GEN-LAST:event_btnEliminarActionPerformed
+
+    private void cargarTabla() {
+        DefaultTableModel modeloTabla = (DefaultTableModel) jTable1.getModel();
+        modeloTabla.setRowCount(0);
+
+        ResultSetMetaData rsmd;
+        int columnas;
+        Connection con;
+        String sql = "{call mostrarCotizacion.mostrarCotizacionVista(?)}";
+        CallableStatement cstmt;
+
+        try {
+            con=Conexion.getConexion();
+            cstmt = con.prepareCall(sql);
+            cstmt.registerOutParameter(1, OracleTypes.CURSOR);
+            cstmt.execute();
+            ResultSet resultSet = (ResultSet) cstmt.getObject(1);
+//            rs = cstmt.executeQuery();
+            rsmd = resultSet.getMetaData();
+            columnas = rsmd.getColumnCount();
+            while (resultSet.next()) {
+                Object[] fila = new Object[columnas];
+                for (int indice = 0; indice < columnas; indice++) {
+                    fila[indice] = resultSet.getObject(indice + 1);
+                }
+                
+                modeloTabla.addRow(fila);
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, e.toString());
+        }
+
+    }
+    
+    private void limpiar() {
+        txtCedProAgrega.setText("");
+        txtCedProEdita.setText("");
+        txtSkuAgrega.setText("");
+        txtSkuEdita.setText("");
+        txtFecCotAgrega.setText("");
+        txtFecCotEdita.setText("");
+        txtFecVenAgrega.setText("");
+        txtFecVenEdita.setText("");
+        txtIdCotEliminar.setText("");
+    }
+    
+=======
+>>>>>>> Stashed changes
         // TODO add your handling code here:
     }//GEN-LAST:event_btnIrInventarioActionPerformed
 
     /**
      * @param args the command line arguments
      */
+>>>>>>> 6f3d5ad794ca81b38f313c775c7dc27b8d72d2d8
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
