@@ -1133,6 +1133,14 @@ COMMIT;
 
 --*************************************************************
 --*************************************************************
+--*************************************************************
+--*************************************************************
+--*************************************************************
+--*************************************************************
+--*************************************************************
+--*************************************************************
+--*************************************************************
+--*************************************************************
 
 --*2 VISTAS PARA Inventario y Facturacion (SELECTs) PARA VISTA WEB: ESTADO_GENERAL.HTML (LUIS)*
 --VISTA 1 - INVENTARIO
@@ -1354,3 +1362,116 @@ END eliminaCotiza;
 END mostrarCotizacion;
 
 COMMIT;
+
+--************************************************
+--************************************************
+
+--Giovanni
+create or replace NONEDITIONABLE PROCEDURE SP_BuscarUusuario (
+    p_username IN VARCHAR2,
+    p_password IN VARCHAR2,
+    p_result OUT NUMBER
+) AS
+    v_count NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO v_count
+    FROM usuarios
+    WHERE ced = p_username AND CONTRASENHA = p_password;
+
+    IF v_count > 0 THEN
+        p_result := 1; -- Login exitoso
+    ELSE
+        p_result := 0; -- Login fallido
+    END IF;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        p_result := 0; -- Login fallido
+    WHEN OTHERS THEN
+        p_result := -1; -- Error en el procedimiento
+END SP_BuscarUusuario;
+
+--************************************************
+--************************************************
+
+--Maria
+-- Crear o reemplazar el paquete para manejar materiales
+CREATE OR REPLACE PACKAGE MostrarMaterial AS
+    -- Procedimiento para obtener todos los materiales
+    PROCEDURE MostrarMaterialesVista(
+        p_cursor OUT SYS_REFCURSOR
+    );
+    --Busqueda
+   -- Procedimiento para Agregar un material
+    PROCEDURE AgregarMaterial(
+        p_sku_producto IN VARCHAR2,
+        p_descripcion IN VARCHAR2,
+        p_precio_unidad IN NUMBER
+       
+    );
+    
+    -- Procedimiento para actualizar la información de un material
+    PROCEDURE ActualizarMaterial(
+        p_sku_producto IN VARCHAR2,
+        p_descripcion IN VARCHAR2,
+        p_precio_unidad IN NUMBER
+       
+    );
+    
+    -- Procedimiento para eliminar un material
+    PROCEDURE EliminarMaterial(
+        p_sku_producto IN VARCHAR2
+    );
+END MostrarMaterial;
+/
+
+-- Crear o reemplazar el cuerpo del paquete para manejar materiales
+CREATE OR REPLACE PACKAGE BODY MostrarMaterial AS
+    -- Procedimiento para obtener todos los materiales
+    PROCEDURE MostrarMaterialesVista(
+        p_cursor OUT SYS_REFCURSOR
+    ) AS
+    BEGIN
+        OPEN p_cursor FOR
+            SELECT *
+            FROM MATERIALES;
+    END MostrarMaterialesVista;
+    
+    -- Procedimiento para Agregar un material
+    PROCEDURE AgregarMaterial(
+        p_sku_producto IN VARCHAR2,
+        p_descripcion IN VARCHAR2,
+        p_precio_unidad IN NUMBER
+       
+    ) AS
+    BEGIN
+           INSERT INTO MATERIALES(sku_producto, descripcion, precio_unidad) VALUES (p_sku_producto, p_descripcion, p_precio_unidad);
+           commit;
+    END AgregarMaterial;
+  
+   
+    
+    -- Procedimiento para actualizar la información de un material
+    PROCEDURE ActualizarMaterial(
+        p_sku_producto IN VARCHAR2,
+        p_descripcion IN VARCHAR2,
+        p_precio_unidad IN NUMBER
+       
+    ) AS
+    BEGIN
+        UPDATE MATERIALES
+        SET descripcion = p_descripcion,
+            precio_unidad = p_precio_unidad
+        WHERE sku_producto = p_sku_producto;
+    END ActualizarMaterial;
+  
+    -- Procedimiento para eliminar un material
+    PROCEDURE EliminarMaterial(
+        p_sku_producto IN VARCHAR2
+    ) AS
+    BEGIN
+     DELETE FROM inventario
+WHERE sku_producto = p_sku_producto;
+        DELETE FROM MATERIALES
+        WHERE sku_producto = p_sku_producto;
+    END EliminarMaterial;
+END MostrarMaterial;
